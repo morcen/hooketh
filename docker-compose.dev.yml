@@ -1,0 +1,29 @@
+services:
+  # Override Laravel Application for development
+  app:
+    build:
+      context: .
+      target: development
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - VITE_DEV_SERVER_URL=http://localhost:5173
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+
+  # Vite Development Server
+  vite:
+    build:
+      context: .
+      dockerfile: Dockerfile.vite
+    container_name: webhook_vite
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - webhook-network
