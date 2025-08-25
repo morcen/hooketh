@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,6 +11,7 @@ use Illuminate\Support\Str;
 
 class Endpoint extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'user_id',
         'name',
@@ -39,7 +41,7 @@ class Endpoint extends Model
 
     public function events(): BelongsToMany
     {
-        return $this->belongsToMany(Event::class)->withTimestamps();
+        return $this->belongsToMany(Event::class, 'event_endpoint')->withTimestamps();
     }
 
     public function deliveries(): HasMany

@@ -19,5 +19,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        
+        // Run the webhook seeder
+        $this->call(WebhookSeeder::class);
     }
 }
