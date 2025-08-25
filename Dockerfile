@@ -36,6 +36,9 @@ RUN docker-php-ext-install \
 # Install Redis extension
 RUN pecl install redis && docker-php-ext-enable redis
 
+# Verify PHP extensions are properly installed
+RUN php -m | grep -E '(pgsql|pdo_pgsql|redis)' && echo "Required PHP extensions installed successfully"
+
 # Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
@@ -45,8 +48,8 @@ WORKDIR /var/www/html
 # Copy application code first
 COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-req=ext-pgsql
+# Install PHP dependencies (after PHP extensions are installed)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Development stage
 FROM php-base AS development

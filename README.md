@@ -50,7 +50,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/webhook-management-platform.git
+   git clone https://github.com/morcen/hooketh.git
    cd webhook-management-platform
    ```
 
@@ -92,6 +92,7 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development instructions.
 
 - **[Development Guide](DEVELOPMENT.md)** - Detailed development setup and workflows
 - **[Docker Documentation](DOCKER.md)** - Docker setup, commands, and configuration
+- **[Deployment Guide](DEPLOYMENT.md)** - Cloud deployment instructions and troubleshooting
 - **[API Documentation](API.md)** - REST API endpoints and examples
 - **[Architecture Overview](ARCHITECTURE.md)** - System design and components
 
@@ -120,9 +121,9 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## 🐛 Issues & Support
 
-- **Bug Reports**: [Create an issue](https://github.com/your-username/webhook-management-platform/issues/new?template=bug_report.md)
-- **Feature Requests**: [Create an issue](https://github.com/your-username/webhook-management-platform/issues/new?template=feature_request.md)
-- **Questions**: [Discussions](https://github.com/your-username/webhook-management-platform/discussions)
+- **Bug Reports**: [Create an issue](https://github.com/morcen/hooketh/issues/new?template=bug_report.md)
+- **Feature Requests**: [Create an issue](https://github.com/morcen/hooketh/issues/new?template=feature_request.md)
+- **Questions**: [Discussions](https://github.com/morcen/hooketh/discussions)
 
 ## 🔐 Security
 
@@ -137,7 +138,7 @@ This project is open-sourced software licensed under the [MIT license](LICENSE).
 - Built with [Laravel](https://laravel.com)
 - UI components by [Tailwind CSS](https://tailwindcss.com)
 - Frontend framework by [Vue.js](https://vuejs.org)
-- Thanks to all [contributors](https://github.com/your-username/webhook-management-platform/graphs/contributors)
+- Thanks to all [contributors](https://github.com/morcen/hooketh/graphs/contributors)
 
 ---
 
