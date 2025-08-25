@@ -105,10 +105,6 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development instructions.
 - **Build Tool**: Vite
 - **Containerization**: Docker & Docker Compose
 
-## 📊 Screenshots
-
-*Coming soon - Dashboard, endpoint management, and analytics views*
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
