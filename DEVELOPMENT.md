@@ -36,7 +36,7 @@ This setup runs Laravel in Docker while running the Vite dev server locally for 
 
 ```bash
 # 1. Clone and enter the project
-git clone https://github.com/your-username/webhook-management-platform.git
+git clone https://github.com/morcen/hooketh.git
 cd webhook-management-platform
 
 # 2. Start Docker services
@@ -371,7 +371,7 @@ make queue-work
 
 ## 🆘 Getting Help
 
-- Check existing [GitHub Issues](https://github.com/your-username/webhook-management-platform/issues)
-- Join our [Discussions](https://github.com/your-username/webhook-management-platform/discussions)
+- Check existing [GitHub Issues](https://github.com/morcen/hooketh/issues)
+- Join our [Discussions](https://github.com/morcen/hooketh/discussions)
 - Review this documentation thoroughly
 - Check container logs for specific error messages

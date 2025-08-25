@@ -215,7 +215,7 @@ After successful deployment:
 
 - **Laravel Cloud Documentation**: [cloud.laravel.com/docs](https://cloud.laravel.com/docs)
 - **Laravel Cloud Support**: Available in dashboard
-- **Project Issues**: [GitHub Issues](https://github.com/your-username/webhook-management-platform/issues)
+- **Project Issues**: [GitHub Issues](https://github.com/morcen/hooketh/issues)
 
 ---
 

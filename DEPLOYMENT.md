@@ -216,7 +216,7 @@ php -m | grep redis
 ### 3. Deploy Application
 ```bash
 # Clone repository
-git clone https://github.com/your-username/webhook-management-platform.git
+git clone https://github.com/morcen/hooketh.git
 cd webhook-management-platform
 
 # Install dependencies
