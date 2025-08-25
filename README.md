@@ -1,8 +1,10 @@
-# 🚀 Webhook Management Platform
+# 🚀 Hooketh: A Webhook Management Platform
 
 <p align="center">
   <strong>A comprehensive, enterprise-grade webhook management and delivery platform built with Laravel and Vue.js</strong>
 </p>
+
+![Hooketh screenshot](https://github.com/morcen/hooketh/blob/main/screenshot.png?raw=true)
 
 <p align="center">
   <a href="#features">Features</a> •
