@@ -97,7 +97,7 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development instructions.
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Laravel 11, PHP 8.2+
+- **Backend**: Laravel 12, PHP 8.2+
 - **Frontend**: Vue.js 3, Inertia.js, Tailwind CSS
 - **Database**: PostgreSQL
 - **Cache & Queue**: Redis
