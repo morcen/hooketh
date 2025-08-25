@@ -23,7 +23,78 @@ An open-source webhook management platform built with Laravel that allows users 
 
 ## Installation
 
-### Prerequisites
+### Option 1: Docker Setup (Recommended)
+
+#### Prerequisites
+
+- Docker
+- Docker Compose
+
+#### Quick Start with Docker
+
+1. **Clone and setup**
+```bash
+cd webhook-management-platform
+./docker/setup.sh
+```
+
+2. **Or manual setup**
+```bash
+# Build and start all services
+make build
+make setup
+
+# Or using docker-compose directly
+docker-compose up -d
+docker-compose exec app php artisan migrate --force
+```
+
+3. **Access the application**
+- Web Interface: http://localhost
+- Development: http://localhost:8000 (with override)
+- MailHog: http://localhost:8025 (development emails)
+
+#### Docker Services
+
+- **app**: Laravel application (PHP 8.2-FPM)
+- **nginx**: Web server (Nginx)
+- **db**: PostgreSQL 15 database
+- **redis**: Redis cache and queue
+- **queue**: Queue worker for webhooks
+- **scheduler**: Cron scheduler for Laravel tasks
+- **mailhog**: Email testing (development only)
+
+#### Useful Docker Commands
+
+```bash
+# View all available commands
+make help
+
+# View logs
+make logs
+
+# Access application shell
+make shell
+
+# Run migrations
+make migrate
+
+# Start development environment (with hot reload)
+make dev
+
+# Start production environment
+make prod
+
+# Stop all services
+make down
+
+# Clean everything (remove containers, volumes, images)
+make clean
+```
+
+### Option 2: Manual Setup
+
+#### Prerequisites
 
 - PHP 8.2+
 - Composer
@@ -31,7 +102,7 @@ An open-source webhook management platform built with Laravel that allows users 
 - PostgreSQL
 - Redis
 
-### Setup
+#### Setup
 
 1. **Install PHP dependencies**
 ```bash

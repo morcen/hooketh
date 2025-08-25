@@ -1,0 +1,56 @@
+services:
+  # Development overrides
+  app:
+    build:
+      context: .
+      target: development
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    volumes:
+      - .:/var/www/html
+      - storage_data:/var/www/html/storage
+      - ./docker/.env.docker:/var/www/html/.env
+    ports:
+      - "8000:8000"
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  queue:
+    build:
+      context: .
+      target: development
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    volumes:
+      - .:/var/www/html
+      - storage_data:/var/www/html/storage
+      - ./docker/.env.docker:/var/www/html/.env
+
+  scheduler:
+    build:
+      context: .
+      target: development
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+    volumes:
+      - .:/var/www/html
+      - storage_data:/var/www/html/storage
+      - ./docker/.env.docker:/var/www/html/.env
+
+  # Nginx with different port for development
+  nginx:
+    ports:
+      - "8080:80"
+      - "8443:443"
+
+  # Development tools
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: webhook_mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - webhook-network
