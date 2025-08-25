@@ -7,7 +7,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "ext-pgsql": "*",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/jetstream": "^5.3",
@@ -60,6 +59,10 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ]
+    },
+    "suggest": {
+        "ext-pgsql": "Required for PostgreSQL database support (automatically available on most cloud platforms)",
+        "ext-redis": "Required for Redis cache and queue support (automatically available on most cloud platforms)"
     },
     "extra": {
         "laravel": {

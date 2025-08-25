@@ -1,0 +1,71 @@
+# Laravel Cloud Deployment Configuration
+# This file configures deployment settings for cloud.laravel.com
+
+# Build configuration
+build:
+  # Install PHP extensions if needed
+  before_build:
+    - |
+      # Check if PostgreSQL extension is available
+      if ! php -m | grep -q pgsql; then
+        echo "Warning: PostgreSQL extensions not found. Laravel Cloud should provide these automatically."
+        echo "Available PHP extensions:"
+        php -m | grep -E "(pdo|sql|redis)" || echo "No database extensions found"
+      fi
+  
+  # Build commands
+  commands:
+    - composer install --no-dev --optimize-autoloader --no-interaction
+    - npm ci
+    - npm run build
+    - php artisan config:cache
+    - php artisan route:cache
+    - php artisan view:cache
+
+# Environment configuration
+environment:
+  # Required environment variables
+  APP_ENV: production
+  APP_DEBUG: false
+  
+  # Database configuration (Laravel Cloud will provide these)
+  DB_CONNECTION: pgsql
+  # DB_HOST: provided by Laravel Cloud
+  # DB_PORT: provided by Laravel Cloud
+  # DB_DATABASE: provided by Laravel Cloud
+  # DB_USERNAME: provided by Laravel Cloud
+  # DB_PASSWORD: provided by Laravel Cloud
+  
+  # Cache and queue configuration
+  CACHE_DRIVER: redis
+  QUEUE_CONNECTION: redis
+  SESSION_DRIVER: redis
+  
+  # Redis configuration (Laravel Cloud will provide these)
+  # REDIS_HOST: provided by Laravel Cloud
+  # REDIS_PASSWORD: provided by Laravel Cloud
+  # REDIS_PORT: provided by Laravel Cloud
+
+# Deployment hooks
+deploy:
+  # Commands to run after deployment
+  after_deploy:
+    - php artisan migrate --force
+    - php artisan db:seed --force --class=DatabaseSeeder
+    - php artisan queue:restart
+
+# Health check configuration
+health_check:
+  path: /health
+  timeout: 30
+
+# Worker configuration for queue processing
+workers:
+  - name: webhook-queue
+    command: php artisan queue:work redis --queue=webhooks,default --sleep=3 --tries=3 --max-time=3600
+    processes: 2
+    
+# Scheduled tasks
+schedule:
+  - command: php artisan schedule:run
+    frequency: "* * * * *"

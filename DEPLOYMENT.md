@@ -144,7 +144,19 @@ gcloud run deploy webhook-platform \
   --set-env-vars REDIS_HOST=YOUR_REDIS_HOST
 ```
 
-### 5. **AWS ECS with Fargate**
+### 5. **Laravel Cloud**
+
+For Laravel's official cloud platform:
+
+**See**: [LARAVEL-CLOUD.md](LARAVEL-CLOUD.md) for complete Laravel Cloud deployment guide.
+
+**Quick Setup:**
+1. Push code to your repository
+2. Connect repository to Laravel Cloud
+3. Configure environment variables
+4. Deploy (PostgreSQL extensions automatically available)
+
+### 6. **AWS ECS with Fargate**
 
 Create `task-definition.json`:
 ```json
