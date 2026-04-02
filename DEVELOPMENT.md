@@ -274,19 +274,30 @@ When `npm run dev` is running, Vue components update instantly without losing st
 ## 🔌 API Development
 
 ### REST API Endpoints
-The platform provides RESTful APIs for external integration:
+The platform provides RESTful APIs under `/api/v1/`:
 
-```php
-// routes/api.php
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('endpoints', EndpointController::class);
-    Route::apiResource('events', EventController::class);
-    Route::apiResource('deliveries', DeliveryController::class);
-});
+```
+# Endpoints
+GET/POST        /api/v1/endpoints
+GET/PUT/DELETE  /api/v1/endpoints/{id}
+POST            /api/v1/endpoints/{id}/regenerate-secret
+
+# Events
+GET/POST        /api/v1/events
+GET/PUT/DELETE  /api/v1/events/{id}
+
+# Deliveries
+GET             /api/v1/deliveries              # supports ?status, ?endpoint_id, ?event_name, ?from_date, ?to_date
+GET             /api/v1/deliveries/stats
+GET             /api/v1/deliveries/{id}
+POST            /api/v1/deliveries/{id}/retry
+
+# Webhooks
+POST            /api/v1/webhooks/trigger/{eventName}   # rate-limited: WEBHOOK_RATE_LIMIT/min
 ```
 
-### API Documentation
-- Access Swagger/OpenAPI docs at: http://localhost:8080/api/docs
+> The unversioned paths (`/api/...`) are kept as deprecated aliases. Prefer `/api/v1/` for all new integrations.
+
 - API routes are defined in `routes/api.php`
 
 ### Creating API Controllers

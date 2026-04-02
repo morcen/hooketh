@@ -52,7 +52,7 @@ graph TB
 - **Vite**: Fast build tool with hot module replacement
 
 #### Backend (Laravel)
-- **Laravel 11**: PHP framework with robust ecosystem
+- **Laravel 12**: PHP framework with robust ecosystem
 - **PHP 8.2+**: Modern PHP with enhanced performance
 - **MVC Architecture**: Clear separation of concerns
 - **Middleware**: Request filtering and authentication
@@ -62,34 +62,34 @@ graph TB
 #### Primary Database (PostgreSQL)
 ```sql
 -- Core Tables
-- users (user accounts and authentication)
-- endpoints (webhook endpoint configurations)
-- events (webhook events and payloads)
+- users          (user accounts and authentication)
+- endpoints      (webhook endpoint configurations, soft-deletable)
+- events         (webhook events, payloads, optional schema, soft-deletable)
 - event_endpoint (many-to-many relationship)
-- deliveries (delivery attempts and responses)
-- jobs (queue job management)
+- deliveries     (delivery attempts, responses, duration_ms)
+- jobs           (queue job management)
 ```
 
 #### Cache & Session Store (Redis)
 - **Session Management**: User session data
 - **Cache Layer**: Application-level caching
 - **Queue Backend**: Background job processing
+- **Scheduler Heartbeat**: `queue:heartbeat` key written every minute to verify the scheduler container is alive
 
 ### 3. Background Processing
 
 #### Queue System
 ```php
 // Job Types
-- WebhookDeliveryJob: Handle webhook HTTP requests
-- RetryFailedWebhooksJob: Process retry attempts
-- CleanupOldDeliveriesJob: Database maintenance
-- SendNotificationJob: Email notifications
+- SendWebhook: Handle webhook HTTP POST with HMAC signing, timing, and retry logic
+- ProcessWebhookRetries (command): Pick up failed deliveries ready for retry
+- QueueHeartbeat (command): Write alive timestamp to Redis every minute
 ```
 
 #### Scheduler
-- **Laravel Scheduler**: Cron-like job scheduling
-- **Retry Logic**: Exponential backoff for failed deliveries
-- **Cleanup Tasks**: Automatic data retention management
+- **Laravel Scheduler**: Cron-like job scheduling via `routes/console.php`
+- **Retry Logic**: `webhooks:process-retries` runs every minute — exponential backoff delays configured via `WEBHOOK_BACKOFF_DELAYS`
+- **Health Heartbeat**: `queue:heartbeat` runs every minute; the `/health` endpoint reports `stale` if no heartbeat within 2 minutes
 
 ## 📊 Data Models & Relationships
 
@@ -121,6 +121,7 @@ erDiagram
         string secret_key
         text description
         boolean is_active
+        timestamp deleted_at
         timestamp created_at
         timestamp updated_at
     }
@@ -128,10 +129,12 @@ erDiagram
     EVENT {
         bigint id PK
         bigint user_id FK
-        string name UK
+        string name
         string event_type
         json payload
+        json schema
         text description
+        timestamp deleted_at
         timestamp created_at
         timestamp updated_at
     }
@@ -144,6 +147,7 @@ erDiagram
         string status
         integer response_code
         text response_body
+        integer duration_ms
         integer attempt_count
         timestamp delivered_at
         timestamp next_retry_at
@@ -292,12 +296,21 @@ services:
 
 ### Health Checks
 ```php
-// Health check endpoints
-GET /health              // Basic application health
-GET /health/database     // Database connectivity
-GET /health/redis        // Redis connectivity
-GET /health/queue        // Queue worker status
+// Single unified health check endpoint
+GET /health
+// Returns:
+// {
+//   "status": "ok"|"error",
+//   "services": {
+//     "database": "connected"|"disconnected",
+//     "redis": "connected"|"disconnected",
+//     "queue_worker": "ok"|"stale"|"unknown"
+//   }
+// }
+// HTTP 200 if healthy, 503 if any service is degraded
 ```
+
+`queue_worker` is `stale` (and the response is 503) if the scheduler heartbeat in Redis is older than 2 minutes, indicating the scheduler container is down.
 
 ### Error Handling
 - **Graceful Degradation**: Fallback mechanisms for service failures
@@ -323,10 +336,10 @@ QUEUE_CONNECTION=redis
 CACHE_DRIVER=redis
 REDIS_HOST=redis
 
-# Webhook Settings
-WEBHOOK_TIMEOUT=30
+# Webhook delivery tuning
 WEBHOOK_MAX_RETRIES=5
-WEBHOOK_RETRY_DELAY=300
+WEBHOOK_BACKOFF_DELAYS=60,300,900,1800,3600
+WEBHOOK_RATE_LIMIT=60
 ```
 
 ### Feature Flags
@@ -406,7 +419,7 @@ graph TB
 
 ### Advanced Features
 - **Webhook Transformations**: Payload transformation pipeline
-- **Rate Limiting**: Per-endpoint rate limiting
+- **Per-endpoint Rate Limiting**: Currently rate-limited per user; per-endpoint granularity is a future enhancement
 - **Analytics Engine**: Advanced webhook analytics and insights
 - **Multi-region Deployment**: Global webhook delivery optimization
 

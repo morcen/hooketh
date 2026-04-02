@@ -281,10 +281,10 @@ MAIL_FROM_NAME="${APP_NAME}"
 
 ### Optional Environment Variables
 ```env
-# Webhook Settings
-WEBHOOK_TIMEOUT=30
-WEBHOOK_MAX_RETRIES=5
-WEBHOOK_RETRY_DELAY=300
+# Webhook delivery tuning
+WEBHOOK_MAX_RETRIES=5                          # Max retry attempts per delivery (default: 5)
+WEBHOOK_BACKOFF_DELAYS=60,300,900,1800,3600    # Seconds between retries (default: 1m,5m,15m,30m,1h)
+WEBHOOK_RATE_LIMIT=60                          # Max trigger requests per minute per user (default: 60)
 
 # Security
 APP_FORCE_HTTPS=true
@@ -333,17 +333,34 @@ server {
 ## 📊 Monitoring and Health Checks
 
 ### Health Check Endpoint
-Add to `routes/web.php`:
-```php
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'timestamp' => now(),
-        'database' => DB::connection()->getPdo() ? 'connected' : 'disconnected',
-        'redis' => Redis::ping() ? 'connected' : 'disconnected',
-    ]);
-});
+
+The `/health` endpoint is already implemented at `routes/web.php`. It checks database, Redis, and the queue worker scheduler heartbeat:
+
 ```
+GET /health
+
+# Healthy response (HTTP 200):
+{
+  "status": "ok",
+  "timestamp": "...",
+  "services": {
+    "database": "connected",
+    "redis": "connected",
+    "queue_worker": "ok"
+  }
+}
+
+# Degraded response (HTTP 503) if any service is down or
+# if the scheduler hasn't written a heartbeat in >2 minutes:
+{
+  "status": "error",
+  "services": {
+    "queue_worker": "stale"
+  }
+}
+```
+
+`queue_worker` is `unknown` if the application has never been fully started (no heartbeat key in Redis yet). The heartbeat is written by `php artisan queue:heartbeat`, which the scheduler container runs every minute.
 
 ### Docker Health Check
 Add to Dockerfile:

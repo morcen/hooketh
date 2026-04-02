@@ -6,12 +6,15 @@ An open-source webhook management platform built with Laravel that allows users 
 
 - **User Authentication**: Basic Laravel authentication with Jetstream
 - **Endpoint Management**: Create, update, delete, and manage webhook endpoints
-- **Event Management**: Define and manage webhook events
+- **Event Management**: Define webhook events with optional payload schema validation
 - **Event Delivery**: Asynchronous webhook delivery with queue processing
-- **Retry Logic**: Automatic retry with exponential backoff for failed deliveries
+- **Retry Logic**: Automatic retry with exponential backoff (configurable via env)
+- **Rate Limiting**: Per-user rate limiting on webhook trigger requests
 - **Dashboard**: Beautiful Inertia.js dashboard for managing webhooks and viewing logs
-- **API**: Full REST API for programmatic access
-- **Delivery Logs**: Detailed logging of all webhook attempts with filtering
+- **API**: Full REST API for programmatic access under `/api/v1/`
+- **Delivery Logs**: Detailed logging of all webhook attempts with filtering, date ranges, and request duration
+- **Secret Key Security**: Endpoint secrets are shown only once at creation or rotation — never exposed again
+- **Soft Deletes**: Deleting endpoints or events preserves historical delivery records
 
 ## Technology Stack
 
@@ -128,6 +131,11 @@ DB_PASSWORD=your_password
 
 QUEUE_CONNECTION=redis
 CACHE_STORE=redis
+
+# Webhook delivery tuning (optional)
+WEBHOOK_MAX_RETRIES=5
+WEBHOOK_BACKOFF_DELAYS=60,300,900,1800,3600
+WEBHOOK_RATE_LIMIT=60
 ```
 
 4. **Generate application key**
@@ -176,10 +184,12 @@ php artisan schedule:run
 
 All API endpoints require authentication using Sanctum. First, create a personal access token from the dashboard or use session-based authentication.
 
+> **API Base URL**: All endpoints are under `/api/v1/`. The unversioned paths (`/api/...`) remain as deprecated aliases for backwards compatibility but will be removed in a future release.
+
 #### Create an Endpoint
 
 ```bash
-curl -X POST http://localhost:8000/api/endpoints \
+curl -X POST http://localhost:8000/api/v1/endpoints \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -190,10 +200,31 @@ curl -X POST http://localhost:8000/api/endpoints \
   }'
 ```
 
+The response includes a `plain_secret` field — **this is the only time the full secret key is returned**. Store it securely. Subsequent requests return only the endpoint without the secret.
+
+```json
+{
+  "id": 1,
+  "name": "My Webhook Endpoint",
+  "url": "https://example.com/webhook",
+  "plain_secret": "abc123...xyz",
+  ...
+}
+```
+
+#### Rotate an Endpoint Secret
+
+```bash
+curl -X POST http://localhost:8000/api/v1/endpoints/1/regenerate-secret \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+Returns the new `plain_secret` once. The previous secret is immediately invalidated.
+
 #### Create an Event
 
 ```bash
-curl -X POST http://localhost:8000/api/events \
+curl -X POST http://localhost:8000/api/v1/events \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -203,10 +234,32 @@ curl -X POST http://localhost:8000/api/events \
   }'
 ```
 
+#### Create an Event with Payload Schema Validation
+
+Optionally attach a schema to enforce payload shape when the event is triggered. The schema uses Laravel validation rule syntax.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "name": "order.created",
+    "description": "Triggered when an order is placed",
+    "schema": {
+      "order_id": "required|integer",
+      "total": "required|numeric",
+      "email": "required|string"
+    },
+    "endpoint_ids": [1]
+  }'
+```
+
+Trigger requests that don't match the schema will receive a `422 Unprocessable Entity` response.
+
 #### Trigger a Webhook Event
 
 ```bash
-curl -X POST http://localhost:8000/api/webhooks/trigger/user.created \
+curl -X POST http://localhost:8000/api/v1/webhooks/trigger/user.created \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
@@ -219,17 +272,26 @@ curl -X POST http://localhost:8000/api/webhooks/trigger/user.created \
   }'
 ```
 
+> **Rate limit**: trigger requests are limited to `WEBHOOK_RATE_LIMIT` per minute per user (default: 60). Exceeding this returns `429 Too Many Requests`.
+
 #### View Delivery Logs
 
 ```bash
-curl -X GET "http://localhost:8000/api/deliveries?status=failed&endpoint_id=1" \
+# Filter by status
+curl -X GET "http://localhost:8000/api/v1/deliveries?status=failed&endpoint_id=1" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Filter by date range
+curl -X GET "http://localhost:8000/api/v1/deliveries?from_date=2024-01-01&to_date=2024-01-31" \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
+
+Each delivery record includes a `duration_ms` field showing how long the HTTP request to the endpoint took.
 
 #### Retry a Failed Delivery
 
 ```bash
-curl -X POST http://localhost:8000/api/deliveries/123/retry \
+curl -X POST http://localhost:8000/api/v1/deliveries/123/retry \
   -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -260,10 +322,12 @@ function verifyWebhook(payload, signature, secret) {
 ### Tables
 
 - **users**: User accounts
-- **endpoints**: Webhook endpoints
-- **events**: Event definitions
+- **endpoints**: Webhook endpoints (`deleted_at` for soft deletes)
+- **events**: Event definitions with optional `schema` for payload validation (`deleted_at` for soft deletes)
 - **event_endpoint**: Many-to-many relationship between events and endpoints
-- **deliveries**: Webhook delivery attempts and logs
+- **deliveries**: Webhook delivery attempts and logs (includes `duration_ms` for request timing)
+
+> Deleting an endpoint or event performs a soft delete — historical delivery records are preserved for audit purposes.
 
 ## Queue Configuration
 
@@ -276,7 +340,7 @@ Create `/etc/supervisor/conf.d/webhook-worker.conf`:
 ```ini
 [program:webhook-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /path/to/webhook-management-platform/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --queue=webhooks
+command=php /path/to/hooketh/artisan queue:work redis --sleep=3 --tries=5 --max-time=3600 --queue=webhooks
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -288,6 +352,8 @@ stdout_logfile=/var/log/webhook-worker.log
 stopwaitsecs=3600
 ```
 
+> The `--tries` flag on the queue worker sets a hard cap but the actual retry count is controlled by `WEBHOOK_MAX_RETRIES` in your `.env` file.
+
 Then restart supervisor:
 ```bash
 sudo supervisorctl reread
@@ -297,7 +363,8 @@ sudo supervisorctl start webhook-worker:*
 
 ## Commands
 
-- `php artisan webhooks:process-retries` - Process failed webhook deliveries that are ready for retry
+- `php artisan webhooks:process-retries` — Process failed webhook deliveries that are ready for retry
+- `php artisan queue:heartbeat` — Write a heartbeat timestamp to Redis (run by the scheduler every minute; used by the `/health` endpoint to verify the scheduler is alive)
 
 ## Development
 
