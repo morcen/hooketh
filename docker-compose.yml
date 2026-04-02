@@ -56,7 +56,6 @@ services:
       - SESSION_DRIVER=redis
     volumes:
       - storage_data:/var/www/html/storage
-      - ./docker/.env.docker:/var/www/html/.env
     networks:
       - webhook-network
 
@@ -85,7 +84,6 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - storage_data:/var/www/html/storage
-      - ./docker/.env.docker:/var/www/html/.env
     networks:
       - webhook-network
 
@@ -114,7 +112,6 @@ services:
       - QUEUE_CONNECTION=redis
     volumes:
       - storage_data:/var/www/html/storage
-      - ./docker/.env.docker:/var/www/html/.env
     networks:
       - webhook-network
 

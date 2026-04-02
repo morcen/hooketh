@@ -58,7 +58,7 @@ npm run dev
 
 ```bash
 # Use the development Docker compose
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+make dev
 ```
 
 ## 🔄 Development Workflow

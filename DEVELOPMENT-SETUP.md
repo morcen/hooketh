@@ -60,7 +60,9 @@ Use this if you want everything in containers or don't want to install Node.js l
 
 1. **Start development containers:**
    ```bash
-   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+   docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+   # or simply
+   make dev
    ```
 
 2. **The setup includes:**
@@ -75,7 +77,7 @@ Use this if you want everything in containers or don't want to install Node.js l
 ### Development Workflow
 ```bash
 # Start development environment
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+make dev
 
 # For frontend changes, you'll need to rebuild assets
 docker-compose exec app npm run build
