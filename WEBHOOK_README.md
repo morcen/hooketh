@@ -82,9 +82,6 @@ make migrate
 # Start development environment (with hot reload)
 make dev
 
-# Start production environment
-make prod
-
 # Stop all services
 make down
 

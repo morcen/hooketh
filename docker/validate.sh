@@ -48,8 +48,8 @@ print_status $? "Dockerfile exists"
 [ -f "docker-compose.yml" ]
 print_status $? "docker-compose.yml exists"
 
-[ -f "docker/.env.docker" ]
-print_status $? "Docker environment file exists"
+[ -f ".env" ]
+print_status $? "Environment file (.env) exists in project root"
 
 [ -f "docker/nginx.conf" ]
 print_status $? "Nginx configuration exists"

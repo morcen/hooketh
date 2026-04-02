@@ -54,23 +54,34 @@
    cd webhook-management-platform
    ```
 
-2. **Start with Docker** (Recommended)
+2. **Set up environment configuration**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+
+   # Generate application key
+   php artisan key:generate
+   ```
+
+   > **Important**: The Docker setup now uses your local `.env` file instead of a separate Docker environment file. Make sure your `.env` file is properly configured before building containers.
+
+3. **Start with Docker** (Recommended)
    ```bash
    # Build and start all services
    make setup
-   
+
    # Or manually:
    docker-compose up -d
    make migrate
    make seed
    ```
 
-3. **Access the application**
+4. **Access the application**
    - **Web Interface**: http://localhost:8080
    - **API Documentation**: http://localhost:8080/api/docs
    - **Email Testing**: http://localhost:8025 (MailHog)
 
-4. **Default Login**
+5. **Default Login**
    - **Email**: test@example.com
    - **Password**: password
 

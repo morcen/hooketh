@@ -48,6 +48,14 @@ WORKDIR /var/www/html
 # Copy application code first
 COPY . .
 
+# Check if .env file exists, if not throw an error
+RUN if [ ! -f ".env" ]; then \
+        echo "ERROR: .env file not found in the project root!"; \
+        echo "Please create a .env file with proper configuration including APP_KEY."; \
+        echo "You can copy from .env.example and run 'php artisan key:generate'"; \
+        exit 1; \
+    fi
+
 # Install PHP dependencies (after PHP extensions are installed)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 

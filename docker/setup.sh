@@ -18,18 +18,22 @@ if ! command -v docker-compose &> /dev/null; then
     exit 1
 fi
 
-# Generate application key if not exists
-if [ ! -f "docker/.env.docker" ]; then
-    echo "❌ Docker environment file not found. Please ensure docker/.env.docker exists."
+# Check if .env file exists in project root
+if [ ! -f ".env" ]; then
+    echo "❌ .env file not found in project root."
+    echo "Please create a .env file with proper configuration."
+    echo "You can copy from .env.example and run 'php artisan key:generate'"
     exit 1
 fi
 
-# Generate a new application key
-APP_KEY=$(openssl rand -base64 32)
-sed -i.bak "s/GENERATE_NEW_KEY_HERE/${APP_KEY}/" docker/.env.docker
-rm docker/.env.docker.bak
+# Check if APP_KEY is set in .env
+if ! grep -q "^APP_KEY=base64:" .env; then
+    echo "⚠️  APP_KEY not found or not properly set in .env file."
+    echo "Please ensure APP_KEY is generated. You can run 'php artisan key:generate'"
+    echo "Continuing with setup..."
+fi
 
-echo "✅ Generated new application key"
+echo "✅ Environment file (.env) found"
 
 # Build and start containers
 echo "🔨 Building Docker containers..."

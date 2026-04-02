@@ -10,7 +10,6 @@ services:
     volumes:
       - .:/var/www/html
       - storage_data:/var/www/html/storage
-      - ./docker/.env.docker:/var/www/html/.env
     ports:
       - "8000:8000"
     command: php artisan serve --host=0.0.0.0 --port=8000
@@ -25,7 +24,6 @@ services:
     volumes:
       - .:/var/www/html
       - storage_data:/var/www/html/storage
-      - ./docker/.env.docker:/var/www/html/.env
 
   scheduler:
     build:
@@ -37,7 +35,6 @@ services:
     volumes:
       - .:/var/www/html
       - storage_data:/var/www/html/storage
-      - ./docker/.env.docker:/var/www/html/.env
 
   # Nginx with different port for development
   nginx:

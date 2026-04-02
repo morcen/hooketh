@@ -37,7 +37,6 @@ Thumbs.db
 /public/storage
 /storage/*.key
 /vendor
-.env*
 !.env.example
 .phpunit.result.cache
 Homestead.json

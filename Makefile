@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs shell migrate fresh seed optimize clean dev prod
+.PHONY: help build up down restart logs shell migrate fresh seed optimize clean dev
 
 # Default target
 help: ## Show this help message
@@ -58,9 +58,6 @@ clean: ## Remove all containers, volumes, and images
 
 dev: ## Start development environment
 	docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
-
-prod: ## Start production environment
-	docker-compose -f docker-compose.yml up -d
 
 setup: ## Initial setup with database migrations
 	./docker/setup.sh

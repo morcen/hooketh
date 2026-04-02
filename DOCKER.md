@@ -2,6 +2,20 @@
 
 This document provides comprehensive instructions for running the Webhook Management Platform using Docker.
 
+## Recent Changes
+
+**Environment Configuration Update**: The Docker setup has been updated to use the main `.env` file from your project root instead of separate Docker-specific environment files. This change:
+
+- ✅ **Improves security** by removing hardcoded APP_KEY from version control
+- ✅ **Ensures consistency** between local and containerized environments
+- ✅ **Simplifies configuration** by using a single environment file
+- ✅ **Follows Laravel best practices** for environment management
+
+**Migration Guide**: If you're upgrading from the previous setup:
+1. Copy your configuration from the old `docker/.env.docker` to `.env` (if it existed)
+2. Run `php artisan key:generate` to create a new APP_KEY
+3. The old Docker environment files have been removed from the project
+
 ## Prerequisites
 
 - Docker 20.10+
@@ -15,13 +29,24 @@ git clone <repository-url>
 cd webhook-management-platform
 ```
 
-2. **Run the setup script**
+2. **Set up environment configuration**
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+> **Important**: The Docker setup uses your local `.env` file from the project root. Ensure this file exists and is properly configured before building containers.
+
+3. **Run the setup script**
 ```bash
 ./docker/setup.sh
 ```
 
-3. **Access the application**
-- Web Interface: http://localhost
+4. **Access the application**
+- Web Interface: http://localhost:8080
 - Development Server: http://localhost:8000 (development mode)
 - MailHog: http://localhost:8025 (email testing)
 
@@ -58,21 +83,7 @@ make dev
 docker-compose up -d
 ```
 
-### Production Environment
 
-Uses `docker-compose.yml` + `docker-compose.prod.yml`:
-
-- Optimized for performance
-- Resource limits set
-- Multiple replicas for scaling
-- Security hardened
-
-```bash
-# Start production environment
-make prod
-# or
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-```
 
 ## Makefile Commands
 
@@ -171,9 +182,11 @@ docker-compose exec app php artisan test
 
 ## Configuration Files
 
-### Docker Environment
-- `docker/.env.docker`: Docker-specific environment variables
-- `docker/.env.production`: Production environment variables
+### Environment Configuration
+- `.env`: Main environment file (used by Docker containers)
+- `.env.example`: Template for environment configuration
+
+> **Note**: The Docker setup now uses the main `.env` file from your project root instead of separate Docker environment files. This ensures consistency between local development and containerized environments.
 
 ### Service Configuration
 - `docker/nginx.conf`: Nginx configuration for Laravel
@@ -184,7 +197,6 @@ docker-compose exec app php artisan test
 - `Dockerfile`: Multi-stage build for different environments
 - `docker-compose.yml`: Base service definitions
 - `docker-compose.override.yml`: Development overrides
-- `docker-compose.prod.yml`: Production overrides
 
 ## Volumes and Data Persistence
 
@@ -194,8 +206,7 @@ docker-compose exec app php artisan test
 - `storage_data`: Laravel storage directory
 
 ### Bind Mounts (Development)
-- `.:/var/www/html`: Application source code
-- `./docker/.env.docker:/var/www/html/.env`: Environment file
+- `.:/var/www/html`: Application source code (includes .env file)
 
 ## Networking
 
@@ -210,11 +221,7 @@ All services communicate through the `webhook-network` bridge network:
 ### Development Resources
 - No resource limits (uses available system resources)
 - Single replica per service
-
-### Production Resources
-- Memory limits set for each service
-- Multiple replicas for app and queue workers
-- Resource reservations for guaranteed availability
+- Optimized for development workflow and debugging
 
 ## Security Considerations
 
@@ -229,13 +236,23 @@ All services communicate through the `webhook-network` bridge network:
 - Sensitive files are excluded via `.dockerignore`
 
 ### Environment Variables
-- Secrets should be managed through environment files
+- The main `.env` file is copied into containers during build
+- Secrets should be managed through the `.env` file
 - Database passwords should be changed in production
 - SSL certificates should be mounted for HTTPS
+- APP_KEY is required and must be generated before building containers
 
 ## Troubleshooting
 
 ### Common Issues
+
+**Missing .env file**
+```bash
+# Error: .env file not found during Docker build
+# Solution: Create .env file from template
+cp .env.example .env
+php artisan key:generate
+```
 
 **Services won't start**
 ```bash
@@ -279,12 +296,7 @@ make queue-restart
 - Increase resource limits in Docker Desktop
 - Use volume mounts for faster file access
 - Enable BuildKit for faster builds
-
-**For Production**
-- Use multi-stage builds to reduce image size
-- Set appropriate resource limits
-- Use external Redis/PostgreSQL for scaling
-- Enable HTTP/2 and Gzip compression
+- Use `docker-compose.override.yml` for development-specific optimizations
 
 ## Monitoring and Logging
 
@@ -317,7 +329,7 @@ docker-compose up -d --scale app=2
 ```
 
 ### Vertical Scaling
-Update resource limits in `docker-compose.prod.yml` and restart services.
+Update resource limits in Docker Compose configuration and restart services.
 
 ## Backup and Recovery
 
@@ -360,30 +372,4 @@ make logs
 make shell
 ```
 
-## Production Deployment
-
-1. **Prepare environment**
-```bash
-cp docker/.env.docker docker/.env.production
-# Edit production environment variables
-```
-
-2. **Build production images**
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
-```
-
-3. **Start production services**
-```bash
-make prod
-```
-
-4. **Run initial setup**
-```bash
-docker-compose exec app php artisan migrate --force
-docker-compose exec app php artisan config:cache
-docker-compose exec app php artisan route:cache
-docker-compose exec app php artisan view:cache
-```
-
-This completes the Docker setup for the Webhook Management Platform. The containerized setup ensures consistent environments across development and production while simplifying deployment and scaling.
+This completes the Docker setup for the Webhook Management Platform. The containerized setup ensures consistent development environments while simplifying local development and testing.
