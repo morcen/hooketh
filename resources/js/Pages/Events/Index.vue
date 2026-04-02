@@ -232,6 +232,21 @@
                         </p>
                         <InputError :message="form.errors.payload" class="mt-2" />
                     </div>
+
+                    <div>
+                        <InputLabel for="schema" value="Payload Schema (Optional)" />
+                        <textarea
+                            id="schema"
+                            v-model="schemaText"
+                            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm mt-1 block w-full font-mono text-sm"
+                            rows="5"
+                            placeholder='{ "user_id": "required|integer", "email": "required|string" }'
+                        ></textarea>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Optional. Define expected payload fields using Laravel validation rules. Trigger requests that don't match will be rejected with a 422.
+                        </p>
+                        <InputError :message="form.errors.schema" class="mt-2" />
+                    </div>
                 </form>
             </template>
 
@@ -374,6 +389,7 @@ const editingEvent = ref(null)
 const managingEvent = ref(null)
 const triggeringEvent = ref(null)
 const payloadText = ref('')
+const schemaText = ref('')
 const triggerPayload = ref('')
 const triggerProcessing = ref(false)
 const selectedEndpoints = ref([])
@@ -384,6 +400,7 @@ const form = useForm({
     event_type: '',
     description: '',
     payload: null,
+    schema: null,
 })
 
 // Computed
@@ -425,6 +442,14 @@ watch(payloadText, (newValue) => {
     }
 })
 
+watch(schemaText, (newValue) => {
+    try {
+        form.schema = newValue ? JSON.parse(newValue) : null
+    } catch (e) {
+        // Invalid JSON - will be handled by backend validation
+    }
+})
+
 // Methods
 function closeModal() {
     showCreateModal.value = false
@@ -433,6 +458,7 @@ function closeModal() {
     form.reset()
     form.clearErrors()
     payloadText.value = ''
+    schemaText.value = ''
 }
 
 function editEvent(event) {
@@ -442,6 +468,8 @@ function editEvent(event) {
     form.description = event.description || ''
     form.payload = event.payload
     payloadText.value = event.payload ? JSON.stringify(event.payload, null, 2) : ''
+    form.schema = event.schema
+    schemaText.value = event.schema ? JSON.stringify(event.schema, null, 2) : ''
     showEditModal.value = true
 }
 
@@ -470,6 +498,8 @@ function duplicateEvent(event) {
     form.description = event.description || ''
     form.payload = event.payload
     payloadText.value = event.payload ? JSON.stringify(event.payload, null, 2) : ''
+    form.schema = event.schema
+    schemaText.value = event.schema ? JSON.stringify(event.schema, null, 2) : ''
     showCreateModal.value = true
 }
 

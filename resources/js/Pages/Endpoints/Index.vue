@@ -92,9 +92,6 @@
                                             <DropdownLink @click="testEndpoint(endpoint)">
                                                 Test Connection
                                             </DropdownLink>
-                                            <DropdownLink @click="copySecret(endpoint)" class="border-t border-gray-100 dark:border-gray-700">
-                                                Copy Secret
-                                            </DropdownLink>
                                             <DropdownLink @click="deleteEndpoint(endpoint)" class="text-red-600">
                                                 Delete
                                             </DropdownLink>
@@ -189,21 +186,20 @@
                     </div>
 
                     <div v-if="editingEndpoint">
-                        <InputLabel for="secret_key" value="Secret Key" />
-                        <div class="flex mt-1">
-                            <TextInput
-                                id="secret_key"
-                                :value="editingEndpoint.secret_key"
-                                type="text"
-                                class="block w-full"
-                                readonly
-                            />
-                            <SecondaryButton @click="regenerateSecret" class="ml-2">
-                                Regenerate
+                        <InputLabel value="Secret Key" />
+                        <div class="flex items-center mt-1 gap-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-600 dark:text-gray-300">
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Secret configured
+                            </span>
+                            <SecondaryButton @click="regenerateSecret" class="whitespace-nowrap">
+                                Rotate Key
                             </SecondaryButton>
                         </div>
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Use this secret to verify webhook signatures.
+                            Rotate to generate a new secret. The new value will be shown once.
                         </p>
                     </div>
                 </form>
@@ -220,6 +216,47 @@
                     class="ml-3"
                 >
                     {{ form.processing ? 'Saving...' : (editingEndpoint ? 'Update' : 'Create') }}
+                </PrimaryButton>
+            </template>
+        </DialogModal>
+
+        <!-- One-Time Secret Modal -->
+        <DialogModal :show="showSecretModal" @close="closeSecretModal">
+            <template #title>
+                Save Your Secret Key
+            </template>
+
+            <template #content>
+                <div class="space-y-4">
+                    <div class="flex items-start p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-md">
+                        <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        </svg>
+                        <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                            This secret key will <strong>not be shown again</strong>. Copy it now and store it securely. Use it to verify webhook signatures on your server.
+                        </p>
+                    </div>
+
+                    <div>
+                        <InputLabel value="Secret Key" />
+                        <div class="flex mt-1">
+                            <TextInput
+                                :value="revealedSecret"
+                                type="text"
+                                class="block w-full font-mono text-sm"
+                                readonly
+                            />
+                            <SecondaryButton @click="copyRevealedSecret" class="ml-2 whitespace-nowrap">
+                                {{ secretCopied ? 'Copied!' : 'Copy' }}
+                            </SecondaryButton>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <template #footer>
+                <PrimaryButton @click="closeSecretModal">
+                    I've saved my secret key
                 </PrimaryButton>
             </template>
         </DialogModal>
@@ -268,8 +305,9 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
+import axios from 'axios'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import SecondaryButton from '@/Components/SecondaryButton.vue'
@@ -292,8 +330,11 @@ const statusFilter = ref('')
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showTestModal = ref(false)
+const showSecretModal = ref(false)
 const editingEndpoint = ref(null)
 const testResult = ref(null)
+const revealedSecret = ref('')
+const secretCopied = ref(false)
 
 // Form
 const form = useForm({
@@ -306,16 +347,16 @@ const form = useForm({
 // Computed
 const filteredEndpoints = computed(() => {
     let filtered = props.endpoints.data || []
-    
+
     if (search.value) {
         const searchLower = search.value.toLowerCase()
-        filtered = filtered.filter(endpoint => 
+        filtered = filtered.filter(endpoint =>
             endpoint.name.toLowerCase().includes(searchLower) ||
             endpoint.url.toLowerCase().includes(searchLower) ||
             (endpoint.description && endpoint.description.toLowerCase().includes(searchLower))
         )
     }
-    
+
     if (statusFilter.value) {
         filtered = filtered.filter(endpoint => {
             if (statusFilter.value === 'active') return endpoint.is_active
@@ -323,7 +364,7 @@ const filteredEndpoints = computed(() => {
             return true
         })
     }
-    
+
     return filtered
 })
 
@@ -336,6 +377,24 @@ function closeModal() {
     form.clearErrors()
 }
 
+function closeSecretModal() {
+    showSecretModal.value = false
+    revealedSecret.value = ''
+    secretCopied.value = false
+}
+
+function showOneTimeSecret(secret) {
+    revealedSecret.value = secret
+    secretCopied.value = false
+    showSecretModal.value = true
+}
+
+function copyRevealedSecret() {
+    navigator.clipboard.writeText(revealedSecret.value).then(() => {
+        secretCopied.value = true
+    })
+}
+
 function editEndpoint(endpoint) {
     editingEndpoint.value = endpoint
     form.name = endpoint.name
@@ -345,15 +404,30 @@ function editEndpoint(endpoint) {
     showEditModal.value = true
 }
 
-function saveEndpoint() {
+async function saveEndpoint() {
     if (editingEndpoint.value) {
         form.put(route('endpoints.update', editingEndpoint.value.id), {
             onSuccess: () => closeModal()
         })
     } else {
-        form.post(route('endpoints.store'), {
-            onSuccess: () => closeModal()
-        })
+        form.processing = true
+        try {
+            const response = await axios.post(route('endpoints.store'), {
+                name: form.name,
+                url: form.url,
+                description: form.description,
+                is_active: form.is_active,
+            })
+            closeModal()
+            router.reload({ only: ['endpoints'] })
+            showOneTimeSecret(response.data.plain_secret)
+        } catch (error) {
+            if (error.response?.data?.errors) {
+                form.setError(error.response.data.errors)
+            }
+        } finally {
+            form.processing = false
+        }
     }
 }
 
@@ -378,16 +452,12 @@ function testEndpoint(endpoint) {
     })
 }
 
-function copySecret(endpoint) {
-    navigator.clipboard.writeText(endpoint.secret_key).then(() => {
-        // You might want to show a toast notification here
-        alert('Secret key copied to clipboard!')
-    })
-}
-
-function regenerateSecret() {
+async function regenerateSecret() {
     if (confirm('Are you sure you want to regenerate the secret key? This will invalidate the current key.')) {
-        router.post(route('endpoints.regenerate-secret', editingEndpoint.value.id))
+        const endpointId = editingEndpoint.value.id
+        closeModal()
+        const response = await axios.post(route('endpoints.regenerate-secret', endpointId))
+        showOneTimeSecret(response.data.plain_secret)
     }
 }
 

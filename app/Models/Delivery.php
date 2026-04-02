@@ -17,6 +17,7 @@ class Delivery extends Model
         'response_code',
         'response_body',
         'attempt_count',
+        'duration_ms',
         'delivered_at',
         'next_retry_at',
     ];

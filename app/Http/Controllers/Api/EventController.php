@@ -32,6 +32,7 @@ class EventController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:events,name',
             'description' => 'nullable|string|max:1000',
+            'schema' => 'nullable|array',
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -89,6 +90,7 @@ class EventController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255|unique:events,name,' . $event->id,
             'description' => 'nullable|string|max:1000',
+            'schema' => 'nullable|array',
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);

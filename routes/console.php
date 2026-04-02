@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Schedule webhook retry processing every minute
 Schedule::command('webhooks:process-retries')->everyMinute();
+
+// Write a heartbeat so the /health endpoint can verify the scheduler is alive
+Schedule::command('queue:heartbeat')->everyMinute();

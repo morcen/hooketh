@@ -48,8 +48,19 @@ class WebhookController extends Controller
             ]);
         }
 
-        $deliveries = [];
         $payload = $request->input('payload');
+
+        if ($event->schema) {
+            $schemaValidator = Validator::make($payload, $event->schema);
+            if ($schemaValidator->fails()) {
+                return response()->json([
+                    'message' => 'Payload does not match event schema',
+                    'errors' => $schemaValidator->errors(),
+                ], 422);
+            }
+        }
+
+        $deliveries = [];
 
         foreach ($activeEndpoints as $endpoint) {
             $delivery = Delivery::create([
@@ -69,13 +80,11 @@ class WebhookController extends Controller
             'message' => 'Webhook event triggered successfully',
             'event' => $event->name,
             'deliveries_created' => count($deliveries),
-            'deliveries' => $deliveries->map(function ($delivery) {
-                return [
-                    'id' => $delivery->id,
-                    'endpoint_id' => $delivery->endpoint_id,
-                    'status' => $delivery->status,
-                ];
-            }),
+            'deliveries' => array_map(fn ($d) => [
+                'id' => $d->id,
+                'endpoint_id' => $d->endpoint_id,
+                'status' => $d->status,
+            ], $deliveries),
         ]);
     }
 

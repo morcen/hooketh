@@ -83,7 +83,7 @@
                 <!-- Filters -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg mb-6">
                     <div class="p-6">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                             <div>
                                 <InputLabel for="status-filter" value="Status" />
                                 <select 
@@ -126,6 +126,28 @@
                                 />
                             </div>
 
+                            <div>
+                                <InputLabel for="from-date" value="From" />
+                                <TextInput
+                                    id="from-date"
+                                    v-model="filters.from_date"
+                                    @change="applyFilters"
+                                    type="date"
+                                    class="mt-1 w-full"
+                                />
+                            </div>
+
+                            <div>
+                                <InputLabel for="to-date" value="To" />
+                                <TextInput
+                                    id="to-date"
+                                    v-model="filters.to_date"
+                                    @change="applyFilters"
+                                    type="date"
+                                    class="mt-1 w-full"
+                                />
+                            </div>
+
                             <div class="flex items-end">
                                 <SecondaryButton @click="clearFilters" class="w-full">
                                     Clear Filters
@@ -155,6 +177,9 @@
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Attempts
+                                    </th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        Duration
                                     </th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Time
@@ -197,6 +222,9 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         {{ delivery.attempt_count }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ delivery.duration_ms != null ? delivery.duration_ms + 'ms' : '—' }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900 dark:text-white">
@@ -288,6 +316,7 @@
                                 </div>
                                 <div><strong>Attempts:</strong> {{ selectedDelivery.attempt_count }}</div>
                                 <div><strong>Response Code:</strong> {{ selectedDelivery.response_code || 'N/A' }}</div>
+                                <div><strong>Duration:</strong> {{ selectedDelivery.duration_ms != null ? selectedDelivery.duration_ms + 'ms' : 'N/A' }}</div>
                                 <div><strong>Delivered At:</strong> {{ formatDateTime(selectedDelivery.delivered_at) }}</div>
                                 <div><strong>Next Retry:</strong> {{ formatDateTime(selectedDelivery.next_retry_at) }}</div>
                                 <div><strong>Created:</strong> {{ formatDateTime(selectedDelivery.created_at) }}</div>
@@ -358,6 +387,8 @@ const filters = ref({
     status: props.filters?.status || '',
     endpoint_id: props.filters?.endpoint_id || '',
     event_name: props.filters?.event_name || '',
+    from_date: props.filters?.from_date || '',
+    to_date: props.filters?.to_date || '',
 })
 
 // Computed
@@ -375,6 +406,7 @@ const pendingCount = computed(() => {
 
 const hasFilters = computed(() => {
     return filters.value.status || filters.value.endpoint_id || filters.value.event_name
+        || filters.value.from_date || filters.value.to_date
 })
 
 // Methods
@@ -447,6 +479,8 @@ function clearFilters() {
         status: '',
         endpoint_id: '',
         event_name: '',
+        from_date: '',
+        to_date: '',
     }
     applyFilters()
 }

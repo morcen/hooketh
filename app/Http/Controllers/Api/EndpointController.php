@@ -7,6 +7,7 @@ use App\Models\Endpoint;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class EndpointController extends Controller
 {
@@ -43,7 +44,12 @@ class EndpointController extends Controller
 
         $endpoint = $request->user()->endpoints()->create($validator->validated());
 
-        return response()->json($endpoint->load('events'), 201);
+        $plainSecret = $endpoint->secret_key;
+
+        return response()->json(
+            array_merge($endpoint->load('events')->toArray(), ['plain_secret' => $plainSecret]),
+            201
+        );
     }
 
     /**
@@ -86,6 +92,23 @@ class EndpointController extends Controller
         $endpoint->update($validator->validated());
 
         return response()->json($endpoint->load('events'));
+    }
+
+    /**
+     * Regenerate the secret key for the specified endpoint.
+     */
+    public function regenerateSecret(Request $request, Endpoint $endpoint): JsonResponse
+    {
+        if ($endpoint->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $newSecret = Str::random(32);
+        $endpoint->update(['secret_key' => $newSecret]);
+
+        return response()->json(
+            array_merge($endpoint->fresh()->toArray(), ['plain_secret' => $newSecret])
+        );
     }
 
     /**

@@ -24,7 +24,8 @@ const submit = () => {
         ...data,
         remember: form.remember ? 'on' : '',
     })).post(route('login'), {
-        onFinish: () => form.reset('password'),
+        // redirect to dashboard
+        onFinish: () => location.href = route('dashboard'),
     });
 };
 </script>

@@ -16,8 +16,12 @@ class SendWebhook implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    public $tries = 5;
     public $maxExceptions = 3;
+
+    public function tries(): int
+    {
+        return config('webhooks.max_retries', 5);
+    }
 
     /**
      * Create a new job instance.
@@ -37,9 +41,16 @@ class SendWebhook implements ShouldQueue
         $this->delivery->update(['status' => 'retrying']);
 
         $endpoint = $this->delivery->endpoint;
+
+        if (!$endpoint || $endpoint->trashed()) {
+            $this->delivery->update(['status' => 'failed', 'response_body' => 'Endpoint was deleted.']);
+            return;
+        }
+
         $payload = $this->delivery->payload;
 
         try {
+            $start = microtime(true);
             $response = Http::timeout(30)
                 ->withHeaders([
                     'Content-Type' => 'application/json',
@@ -48,11 +59,13 @@ class SendWebhook implements ShouldQueue
                     'User-Agent' => 'Webhook-Management-Platform/1.0',
                 ])
                 ->post($endpoint->url, $payload);
+            $durationMs = (int) round((microtime(true) - $start) * 1000);
 
             $this->delivery->update([
                 'status' => $response->successful() ? 'success' : 'failed',
                 'response_code' => $response->status(),
                 'response_body' => $response->body(),
+                'duration_ms' => $durationMs,
                 'delivered_at' => $response->successful() ? now() : null,
                 'next_retry_at' => null,
             ]);
@@ -113,13 +126,12 @@ class SendWebhook implements ShouldQueue
      */
     public function backoff(): array
     {
-        // Exponential backoff: 1min, 5min, 15min, 30min, 1hour
-        return [60, 300, 900, 1800, 3600];
+        return config('webhooks.backoff_delays', [60, 300, 900, 1800, 3600]);
     }
 
     private function handleFailedDelivery(): void
     {
-        if ($this->delivery->attempt_count < $this->tries) {
+        if ($this->delivery->attempt_count < $this->tries()) {
             $delay = $this->backoff()[$this->delivery->attempt_count - 1] ?? 3600;
             $this->delivery->update([
                 'next_retry_at' => now()->addSeconds($delay),

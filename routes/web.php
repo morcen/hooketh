@@ -56,6 +56,18 @@ Route::get('/health', function () {
         'redis' => extension_loaded('redis'),
     ];
     
+    // Check queue worker via scheduler heartbeat
+    $heartbeat = Redis::get('queue:heartbeat');
+    $queueStatus = match(true) {
+        $heartbeat === null                              => 'unknown',
+        (now()->timestamp - (int) $heartbeat) <= 120    => 'ok',
+        default                                          => 'stale',
+    };
+    $health['services']['queue_worker'] = $queueStatus;
+    if ($queueStatus === 'stale') {
+        $health['status'] = 'error';
+    }
+
     $status = $health['status'] === 'ok' ? 200 : 503;
     return response()->json($health, $status);
 });
