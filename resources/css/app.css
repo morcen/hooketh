@@ -5,3 +5,43 @@
 [x-cloak] {
     display: none;
 }
+
+@layer base {
+    body {
+        @apply bg-slate-100 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    }
+}
+
+@layer components {
+    .app-surface {
+        @apply border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none;
+    }
+
+    .app-panel {
+        @apply rounded-lg border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none;
+    }
+
+    .app-muted-panel {
+        @apply rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/70;
+    }
+
+    .app-label {
+        @apply text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400;
+    }
+
+    .app-input {
+        @apply rounded-md border-slate-300 bg-white text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500;
+    }
+
+    .app-select {
+        @apply rounded-md border-slate-300 bg-white text-sm text-slate-800 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100;
+    }
+
+    .app-stat {
+        @apply rounded-lg border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/70 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none;
+    }
+
+    .app-status {
+        @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+    }
+}

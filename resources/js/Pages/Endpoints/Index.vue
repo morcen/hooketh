@@ -1,253 +1,249 @@
 <template>
-    <AppLayout title="Manage Endpoints">
+    <AppLayout title="Endpoints">
         <template #header>
-            <div class="flex justify-between items-center">
-                <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    Manage Endpoints
-                </h2>
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p class="app-label">Delivery targets</p>
+                    <h1 class="mt-2 text-2xl font-bold text-slate-950 dark:text-white">Endpoints</h1>
+                    <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Manage destination URLs, signing secrets, and event subscriptions.
+                    </p>
+                </div>
                 <PrimaryButton @click="showCreateModal = true">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"/>
                     </svg>
-                    Add Endpoint
+                    Add endpoint
                 </PrimaryButton>
             </div>
         </template>
 
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <!-- Search and Filters -->
-                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg mb-6">
-                    <div class="p-6">
-                        <div class="flex flex-col md:flex-row gap-4">
-                            <div class="flex-1">
-                                <TextInput
-                                    v-model="search"
-                                    placeholder="Search endpoints..."
-                                    class="w-full"
-                                />
-                            </div>
-                            <div class="flex gap-2">
-                                <select 
-                                    v-model="statusFilter" 
-                                    class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
-                                >
-                                    <option value="">All Status</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                                <PrimaryButton @click="clearFilters" variant="outline">
-                                    Clear Filters
-                                </PrimaryButton>
-                            </div>
+        <div class="py-8">
+            <div class="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="app-stat">
+                        <p class="app-label">Total endpoints</p>
+                        <p class="mt-3 text-3xl font-bold text-slate-950 dark:text-white">{{ endpointStats.total }}</p>
+                        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Across this workspace</p>
+                    </div>
+                    <div class="app-stat">
+                        <p class="app-label">Active shown</p>
+                        <p class="mt-3 text-3xl font-bold text-emerald-700 dark:text-emerald-300">{{ endpointStats.active }}</p>
+                        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">On this page</p>
+                    </div>
+                    <div class="app-stat">
+                        <p class="app-label">Subscriptions shown</p>
+                        <p class="mt-3 text-3xl font-bold text-slate-950 dark:text-white">{{ endpointStats.subscriptions }}</p>
+                        <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">Event links on this page</p>
+                    </div>
+                </div>
+
+                <div class="app-panel p-4">
+                    <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+                        <div class="relative flex-1">
+                            <svg class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 110-15 7.5 7.5 0 010 15z"/>
+                            </svg>
+                            <TextInput
+                                v-model="search"
+                                placeholder="Search by name, URL, or description"
+                                class="w-full pl-9"
+                            />
+                        </div>
+                        <div class="flex flex-col gap-3 sm:flex-row">
+                            <select v-model="statusFilter" class="app-select min-w-40">
+                                <option value="">All statuses</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                            <SecondaryButton @click="clearFilters" :disabled="!search && !statusFilter">
+                                Clear
+                            </SecondaryButton>
                         </div>
                     </div>
                 </div>
 
-                <!-- Endpoints Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                    <div 
-                        v-for="endpoint in filteredEndpoints" 
+                <div v-if="filteredEndpoints.length" class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <article
+                        v-for="endpoint in filteredEndpoints"
                         :key="endpoint.id"
-                        class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg"
+                        class="app-panel p-5 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/70 dark:hover:shadow-none"
                     >
-                        <div class="p-6">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center mb-2">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                            {{ endpoint.name }}
-                                        </h3>
-                                        <span 
-                                            :class="endpoint.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'"
-                                            class="ml-2 px-2 py-1 text-xs font-medium rounded-full"
-                                        >
-                                            {{ endpoint.is_active ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </div>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                        {{ endpoint.description || 'No description' }}
-                                    </p>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                                        <p class="truncate">{{ endpoint.url }}</p>
-                                        <p>{{ endpoint.events?.length || 0 }} subscribed events</p>
-                                    </div>
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h2 class="truncate text-lg font-semibold text-slate-950 dark:text-white">
+                                        {{ endpoint.name }}
+                                    </h2>
+                                    <span :class="endpoint.is_active ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'" class="app-status">
+                                        <span :class="endpoint.is_active ? 'bg-emerald-500' : 'bg-slate-400'" class="mr-1.5 size-1.5 rounded-full"></span>
+                                        {{ endpoint.is_active ? 'Active' : 'Inactive' }}
+                                    </span>
                                 </div>
-                                <div class="ml-4">
-                                    <Dropdown>
-                                        <template #trigger>
-                                            <button class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                                                </svg>
-                                            </button>
-                                        </template>
-                                        <template #content>
-                                            <DropdownLink @click="editEndpoint(endpoint)">
-                                                Edit
-                                            </DropdownLink>
-                                            <DropdownLink @click="toggleEndpoint(endpoint)">
-                                                {{ endpoint.is_active ? 'Deactivate' : 'Activate' }}
-                                            </DropdownLink>
-                                            <DropdownLink @click="testEndpoint(endpoint)">
-                                                Test Connection
-                                            </DropdownLink>
-                                            <DropdownLink @click="deleteEndpoint(endpoint)" class="text-red-600">
-                                                Delete
-                                            </DropdownLink>
-                                        </template>
-                                    </Dropdown>
-                                </div>
+                                <p class="mt-2 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">
+                                    {{ endpoint.description || 'No description added yet.' }}
+                                </p>
                             </div>
-                            
-                            <!-- Stats -->
-                            <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <span>Last used: {{ formatDate(endpoint.updated_at) }}</span>
-                                <span>Created: {{ formatDate(endpoint.created_at) }}</span>
+
+                            <Dropdown>
+                                <template #trigger>
+                                    <button class="rounded-md p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:hover:bg-slate-800 dark:hover:text-slate-200">
+                                        <svg class="size-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                                        </svg>
+                                    </button>
+                                </template>
+                                <template #content>
+                                    <DropdownLink @click="editEndpoint(endpoint)">Edit</DropdownLink>
+                                    <DropdownLink @click="toggleEndpoint(endpoint)">
+                                        {{ endpoint.is_active ? 'Deactivate' : 'Activate' }}
+                                    </DropdownLink>
+                                    <DropdownLink @click="testEndpoint(endpoint)">Test connection</DropdownLink>
+                                    <DropdownLink @click="deleteEndpoint(endpoint)" class="text-rose-600">Delete</DropdownLink>
+                                </template>
+                            </Dropdown>
+                        </div>
+
+                        <div class="mt-5 rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">
+                            <div class="flex items-center justify-between gap-3">
+                                <code class="min-w-0 truncate text-xs font-semibold text-slate-700 dark:text-slate-300">{{ endpoint.url }}</code>
+                                <button
+                                    type="button"
+                                    @click="copyUrl(endpoint.url)"
+                                    class="shrink-0 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:text-slate-950 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-white"
+                                >
+                                    {{ copiedUrl === endpoint.url ? 'Copied' : 'Copy' }}
+                                </button>
                             </div>
                         </div>
-                    </div>
+
+                        <div class="mt-5 grid grid-cols-2 gap-3">
+                            <div class="app-muted-panel p-3">
+                                <p class="app-label">Events</p>
+                                <p class="mt-1 text-lg font-bold text-slate-950 dark:text-white">{{ endpoint.events?.length || 0 }}</p>
+                            </div>
+                            <div class="app-muted-panel p-3">
+                                <p class="app-label">Updated</p>
+                                <p class="mt-1 text-sm font-semibold text-slate-700 dark:text-slate-200">{{ formatDate(endpoint.updated_at) }}</p>
+                            </div>
+                        </div>
+
+                        <div v-if="endpoint.events?.length" class="mt-4 flex flex-wrap gap-2">
+                            <span
+                                v-for="event in endpoint.events.slice(0, 4)"
+                                :key="event.id"
+                                class="rounded-md bg-teal-50 px-2.5 py-1 text-xs font-semibold text-teal-800 dark:bg-teal-950 dark:text-teal-300"
+                            >
+                                {{ event.name }}
+                            </span>
+                            <span v-if="endpoint.events.length > 4" class="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                +{{ endpoint.events.length - 4 }} more
+                            </span>
+                        </div>
+                    </article>
                 </div>
 
-                <!-- Empty State -->
-                <div v-if="filteredEndpoints.length === 0" class="text-center py-12">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg p-12">
-                        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                <div v-else class="app-panel px-6 py-14 text-center">
+                    <div class="mx-auto flex size-14 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                        <svg class="size-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v7.5A2.25 2.25 0 005.25 18h8.25m3-12L21 10.5m0 0L16.5 15M21 10.5H9" />
                         </svg>
-                        <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No endpoints found</h3>
-                        <p class="mt-2 text-gray-500 dark:text-gray-400">
-                            {{ search || statusFilter ? 'Try adjusting your search or filters.' : 'Get started by creating your first webhook endpoint.' }}
-                        </p>
-                        <PrimaryButton @click="showCreateModal = true" class="mt-4" v-if="!search && !statusFilter">
-                            Add Endpoint
-                        </PrimaryButton>
                     </div>
+                    <h2 class="mt-5 text-lg font-semibold text-slate-950 dark:text-white">No endpoints found</h2>
+                    <p class="mx-auto mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+                        {{ search || statusFilter ? 'Adjust the search or status filter to find a matching endpoint.' : 'Create your first endpoint to start receiving signed webhook deliveries.' }}
+                    </p>
+                    <PrimaryButton v-if="!search && !statusFilter" @click="showCreateModal = true" class="mt-5">
+                        Add endpoint
+                    </PrimaryButton>
                 </div>
 
-                <!-- Pagination -->
                 <div v-if="endpoints.last_page > 1" class="mt-6">
                     <Pagination :links="endpoints.links" />
                 </div>
             </div>
         </div>
 
-        <!-- Create/Edit Modal -->
         <DialogModal :show="showCreateModal || showEditModal" @close="closeModal">
             <template #title>
-                {{ editingEndpoint ? 'Edit Endpoint' : 'Create New Endpoint' }}
+                {{ editingEndpoint ? 'Edit endpoint' : 'Create endpoint' }}
             </template>
 
             <template #content>
                 <form @submit.prevent="saveEndpoint" class="space-y-6">
                     <div>
-                        <InputLabel for="name" value="Endpoint Name" />
-                        <TextInput
-                            id="name"
-                            v-model="form.name"
-                            type="text"
-                            class="mt-1 block w-full"
-                            required
-                            autofocus
-                        />
+                        <InputLabel for="name" value="Endpoint name" />
+                        <TextInput id="name" v-model="form.name" type="text" class="mt-1 block w-full" required autofocus placeholder="Production billing receiver" />
                         <InputError :message="form.errors.name" class="mt-2" />
                     </div>
 
                     <div>
-                        <InputLabel for="url" value="URL" />
-                        <TextInput
-                            id="url"
-                            v-model="form.url"
-                            type="url"
-                            class="mt-1 block w-full"
-                            required
-                            placeholder="https://example.com/webhook"
-                        />
+                        <InputLabel for="url" value="Destination URL" />
+                        <TextInput id="url" v-model="form.url" type="url" class="mt-1 block w-full font-mono text-sm" required placeholder="https://example.com/webhook" />
                         <InputError :message="form.errors.url" class="mt-2" />
                     </div>
 
                     <div>
-                        <InputLabel for="description" value="Description (Optional)" />
-                        <textarea
-                            id="description"
-                            v-model="form.description"
-                            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm mt-1 block w-full"
-                            rows="3"
-                            placeholder="Brief description of this endpoint..."
-                        ></textarea>
+                        <InputLabel for="description" value="Description" />
+                        <textarea id="description" v-model="form.description" class="app-input mt-1 block w-full" rows="3" placeholder="What receives these webhooks?"></textarea>
                         <InputError :message="form.errors.description" class="mt-2" />
                     </div>
 
-                    <div>
-                        <label class="flex items-center">
-                            <Checkbox v-model:checked="form.is_active" />
-                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Active</span>
-                        </label>
-                    </div>
+                    <label class="flex items-center rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950">
+                        <Checkbox v-model:checked="form.is_active" />
+                        <span class="ml-3">
+                            <span class="block text-sm font-semibold text-slate-800 dark:text-slate-100">Endpoint is active</span>
+                            <span class="block text-sm text-slate-500 dark:text-slate-400">Active endpoints receive deliveries for subscribed events.</span>
+                        </span>
+                    </label>
 
-                    <div v-if="editingEndpoint">
-                        <InputLabel value="Secret Key" />
-                        <div class="flex items-center mt-1 gap-3">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-gray-100 dark:bg-gray-700 text-sm text-gray-600 dark:text-gray-300">
-                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div v-if="editingEndpoint" class="rounded-md border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-900 dark:bg-emerald-950/40">
+                        <InputLabel value="Signing secret" />
+                        <div class="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <span class="inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+                                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                                 Secret configured
                             </span>
                             <SecondaryButton @click="regenerateSecret" class="whitespace-nowrap">
-                                Rotate Key
+                                Rotate key
                             </SecondaryButton>
                         </div>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Rotate to generate a new secret. The new value will be shown once.
+                        <p class="mt-2 text-sm text-emerald-900/75 dark:text-emerald-200/75">
+                            Rotating creates a new one-time secret and invalidates the current value.
                         </p>
                     </div>
                 </form>
             </template>
 
             <template #footer>
-                <SecondaryButton @click="closeModal">
-                    Cancel
-                </SecondaryButton>
-
-                <PrimaryButton 
-                    @click="saveEndpoint" 
-                    :disabled="form.processing"
-                    class="ml-3"
-                >
-                    {{ form.processing ? 'Saving...' : (editingEndpoint ? 'Update' : 'Create') }}
+                <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
+                <PrimaryButton @click="saveEndpoint" :disabled="form.processing" class="ml-3">
+                    {{ form.processing ? 'Saving...' : (editingEndpoint ? 'Update endpoint' : 'Create endpoint') }}
                 </PrimaryButton>
             </template>
         </DialogModal>
 
-        <!-- One-Time Secret Modal -->
         <DialogModal :show="showSecretModal" @close="closeSecretModal">
             <template #title>
-                Save Your Secret Key
+                Save your signing secret
             </template>
 
             <template #content>
                 <div class="space-y-4">
-                    <div class="flex items-start p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-md">
-                        <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                        </svg>
-                        <p class="text-sm text-yellow-800 dark:text-yellow-300">
-                            This secret key will <strong>not be shown again</strong>. Copy it now and store it securely. Use it to verify webhook signatures on your server.
+                    <div class="rounded-md border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+                        <p class="text-sm text-amber-900 dark:text-amber-200">
+                            This secret is shown once. Store it securely and use it to verify webhook signatures on your server.
                         </p>
                     </div>
 
                     <div>
-                        <InputLabel value="Secret Key" />
-                        <div class="flex mt-1">
-                            <TextInput
-                                :value="revealedSecret"
-                                type="text"
-                                class="block w-full font-mono text-sm"
-                                readonly
-                            />
-                            <SecondaryButton @click="copyRevealedSecret" class="ml-2 whitespace-nowrap">
-                                {{ secretCopied ? 'Copied!' : 'Copy' }}
+                        <InputLabel value="Secret key" />
+                        <div class="mt-1 flex gap-2">
+                            <TextInput :value="revealedSecret" type="text" class="block w-full font-mono text-sm" readonly />
+                            <SecondaryButton @click="copyRevealedSecret" class="whitespace-nowrap">
+                                {{ secretCopied ? 'Copied' : 'Copy' }}
                             </SecondaryButton>
                         </div>
                     </div>
@@ -256,49 +252,43 @@
 
             <template #footer>
                 <PrimaryButton @click="closeSecretModal">
-                    I've saved my secret key
+                    I've saved it
                 </PrimaryButton>
             </template>
         </DialogModal>
 
-        <!-- Test Result Modal -->
         <DialogModal :show="showTestModal" @close="showTestModal = false">
             <template #title>
-                Connection Test Result
+                Connection test
             </template>
 
             <template #content>
-                <div v-if="testResult">
-                    <div class="flex items-center mb-4">
-                        <div 
-                            :class="testResult.success ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'"
-                            class="p-2 rounded-full mr-3"
-                        >
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div v-if="testResult" class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div :class="testResult.success ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'" class="rounded-full p-2">
+                            <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path v-if="testResult.success" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-medium">
-                                {{ testResult.success ? 'Connection Successful' : 'Connection Failed' }}
+                            <h3 class="text-lg font-semibold text-slate-950 dark:text-white">
+                                {{ testResult.success ? 'Connection successful' : 'Connection failed' }}
                             </h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">
-                                Response Code: {{ testResult.response_code }}
+                            <p class="text-sm text-slate-500 dark:text-slate-400">
+                                Response code: {{ testResult.response_code || 'N/A' }}
                             </p>
                         </div>
                     </div>
-                    
-                    <div v-if="testResult.message" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-md">
-                        <pre class="text-sm">{{ testResult.message }}</pre>
+
+                    <div v-if="testResult.message" class="rounded-md bg-slate-100 p-4 dark:bg-slate-950">
+                        <pre class="overflow-x-auto text-sm text-slate-700 dark:text-slate-300">{{ testResult.message }}</pre>
                     </div>
                 </div>
             </template>
 
             <template #footer>
-                <SecondaryButton @click="showTestModal = false">
-                    Close
-                </SecondaryButton>
+                <SecondaryButton @click="showTestModal = false">Close</SecondaryButton>
             </template>
         </DialogModal>
     </AppLayout>
@@ -324,7 +314,6 @@ const props = defineProps({
     endpoints: Object,
 })
 
-// State
 const search = ref('')
 const statusFilter = ref('')
 const showCreateModal = ref(false)
@@ -335,8 +324,8 @@ const editingEndpoint = ref(null)
 const testResult = ref(null)
 const revealedSecret = ref('')
 const secretCopied = ref(false)
+const copiedUrl = ref('')
 
-// Form
 const form = useForm({
     name: '',
     url: '',
@@ -344,7 +333,6 @@ const form = useForm({
     is_active: true,
 })
 
-// Computed
 const filteredEndpoints = computed(() => {
     let filtered = props.endpoints.data || []
 
@@ -368,7 +356,16 @@ const filteredEndpoints = computed(() => {
     return filtered
 })
 
-// Methods
+const endpointStats = computed(() => {
+    const all = props.endpoints.data || []
+
+    return {
+        total: props.endpoints.total || all.length,
+        active: all.filter(endpoint => endpoint.is_active).length,
+        subscriptions: all.reduce((count, endpoint) => count + (endpoint.events?.length || 0), 0),
+    }
+})
+
 function closeModal() {
     showCreateModal.value = false
     showEditModal.value = false
@@ -392,6 +389,15 @@ function showOneTimeSecret(secret) {
 function copyRevealedSecret() {
     navigator.clipboard.writeText(revealedSecret.value).then(() => {
         secretCopied.value = true
+    })
+}
+
+function copyUrl(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        copiedUrl.value = url
+        setTimeout(() => {
+            copiedUrl.value = ''
+        }, 1600)
     })
 }
 
