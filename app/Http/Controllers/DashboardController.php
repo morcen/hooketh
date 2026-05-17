@@ -58,6 +58,19 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function editEvent(Request $request, Event $event): Response
+    {
+        abort_if($event->user_id !== $request->user()->id, 403);
+
+        $event->load('endpoints');
+        $endpoints = $request->user()->endpoints()->get();
+
+        return Inertia::render('Events/Edit', [
+            'event' => $event,
+            'endpoints' => $endpoints,
+        ]);
+    }
+
     public function deliveries(Request $request): Response
     {
         $query = Delivery::with(['event', 'endpoint'])

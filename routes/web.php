@@ -80,5 +80,6 @@ Route::middleware([
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/endpoints', [DashboardController::class, 'endpoints'])->name('endpoints');
     Route::get('/events', [DashboardController::class, 'events'])->name('events');
+    Route::get('/events/{event}/edit', [DashboardController::class, 'editEvent'])->name('events.edit');
     Route::get('/deliveries', [DashboardController::class, 'deliveries'])->name('deliveries');
 });

@@ -115,7 +115,7 @@
                                             </button>
                                         </template>
                                         <template #content>
-                                            <DropdownLink @click="editEvent(event)">
+                                            <DropdownLink :href="route('events.edit', event.id)">
                                                 Edit Event
                                             </DropdownLink>
                                             <DropdownLink @click="manageEndpoints(event)">
@@ -170,10 +170,10 @@
             </div>
         </div>
 
-        <!-- Create/Edit Event Modal -->
-        <DialogModal :show="showCreateModal || showEditModal" @close="closeModal" max-width="3xl">
+        <!-- Create Event Modal -->
+        <DialogModal :show="showCreateModal" @close="closeModal" max-width="3xl">
             <template #title>
-                {{ editingEvent ? 'Edit Event' : 'Create New Event' }}
+                Create New Event
             </template>
 
             <template #content>
@@ -255,12 +255,12 @@
                     Cancel
                 </SecondaryButton>
 
-                <PrimaryButton 
-                    @click="saveEvent" 
+                <PrimaryButton
+                    @click="saveEvent"
                     :disabled="form.processing"
                     class="ml-3"
                 >
-                    {{ form.processing ? 'Saving...' : (editingEvent ? 'Update' : 'Create') }}
+                    {{ form.processing ? 'Saving...' : 'Create' }}
                 </PrimaryButton>
             </template>
         </DialogModal>
@@ -382,10 +382,8 @@ const props = defineProps({
 const search = ref('')
 const typeFilter = ref('')
 const showCreateModal = ref(false)
-const showEditModal = ref(false)
 const showEndpointsModal = ref(false)
 const showTriggerModal = ref(false)
-const editingEvent = ref(null)
 const managingEvent = ref(null)
 const triggeringEvent = ref(null)
 const payloadText = ref('')
@@ -453,36 +451,16 @@ watch(schemaText, (newValue) => {
 // Methods
 function closeModal() {
     showCreateModal.value = false
-    showEditModal.value = false
-    editingEvent.value = null
     form.reset()
     form.clearErrors()
     payloadText.value = ''
     schemaText.value = ''
 }
 
-function editEvent(event) {
-    editingEvent.value = event
-    form.name = event.name
-    form.event_type = event.event_type || ''
-    form.description = event.description || ''
-    form.payload = event.payload
-    payloadText.value = event.payload ? JSON.stringify(event.payload, null, 2) : ''
-    form.schema = event.schema
-    schemaText.value = event.schema ? JSON.stringify(event.schema, null, 2) : ''
-    showEditModal.value = true
-}
-
 function saveEvent() {
-    if (editingEvent.value) {
-        form.put(route('events.update', editingEvent.value.id), {
-            onSuccess: () => closeModal()
-        })
-    } else {
-        form.post(route('events.store'), {
-            onSuccess: () => closeModal()
-        })
-    }
+    form.post(route('events.store'), {
+        onSuccess: () => closeModal()
+    })
 }
 
 function deleteEvent(event) {
@@ -492,7 +470,6 @@ function deleteEvent(event) {
 }
 
 function duplicateEvent(event) {
-    editingEvent.value = null
     form.name = event.name + ' (Copy)'
     form.event_type = event.event_type || ''
     form.description = event.description || ''
