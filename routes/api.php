@@ -49,17 +49,29 @@ Route::prefix('v1')
 // Unversioned aliases — DEPRECATED, preserved for backwards compatibility
 // -------------------------------------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('endpoints', EndpointController::class);
-    Route::post('endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret'])
-        ->name('endpoints.regenerate-secret');
+    Route::apiResource('endpoints', EndpointController::class)->names([
+        'index'   => 'api.endpoints.index',
+        'store'   => 'api.endpoints.store',
+        'show'    => 'api.endpoints.show',
+        'update'  => 'api.endpoints.update',
+        'destroy' => 'api.endpoints.destroy',
+    ]);
+    Route::post('endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret']);
 
-    Route::apiResource('events', EventController::class);
+    Route::apiResource('events', EventController::class)->names([
+        'index'   => 'api.events.index',
+        'store'   => 'api.events.store',
+        'show'    => 'api.events.show',
+        'update'  => 'api.events.update',
+        'destroy' => 'api.events.destroy',
+    ]);
 
     Route::get('deliveries', [DeliveryController::class, 'index']);
     Route::get('deliveries/stats', [DeliveryController::class, 'stats']);
     Route::get('deliveries/{delivery}', [DeliveryController::class, 'show']);
 
-    Route::post('webhooks/trigger/{eventName}', [WebhookController::class, 'trigger'])
-        ->middleware('throttle:webhook-trigger');
+    
     Route::post('deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery']);
 });
+Route::post('webhooks/trigger/{eventName}', [WebhookController::class, 'trigger'])
+        ->middleware('throttle:webhook-trigger');

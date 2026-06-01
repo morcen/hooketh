@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EndpointController;
+use App\Http\Controllers\EventController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -79,7 +81,17 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/endpoints', [DashboardController::class, 'endpoints'])->name('endpoints');
+    Route::post('/endpoints', [EndpointController::class, 'store'])->name('endpoints.store');
+    Route::match(['put', 'patch'], '/endpoints/{endpoint}', [EndpointController::class, 'update'])->name('endpoints.update');
+    Route::delete('/endpoints/{endpoint}', [EndpointController::class, 'destroy'])->name('endpoints.destroy');
+    Route::post('/endpoints/{endpoint}/test', [EndpointController::class, 'test'])->name('endpoints.test');
+    Route::post('/endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret'])->name('endpoints.regenerate-secret');
     Route::get('/events', [DashboardController::class, 'events'])->name('events');
+    Route::post('/events', [EventController::class, 'store'])->name('events.store');
+    Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+    Route::post('/events/{event}/endpoints', [EventController::class, 'syncEndpoints'])->name('events.endpoints');
+    Route::post('/events/{event}/trigger', [EventController::class, 'trigger'])->name('events.trigger');
     Route::get('/events/{event}/edit', [DashboardController::class, 'editEvent'])->name('events.edit');
+    Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::get('/deliveries', [DashboardController::class, 'deliveries'])->name('deliveries');
 });

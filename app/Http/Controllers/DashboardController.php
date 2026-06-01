@@ -54,7 +54,8 @@ class DashboardController extends Controller
             ->paginate(15);
 
         return Inertia::render('Events/Index', [
-            'events' => $events,
+            'events'    => $events,
+            'endpoints' => $request->user()->endpoints()->get(['id', 'name', 'url', 'description', 'is_active']),
         ]);
     }
 

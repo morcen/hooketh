@@ -266,7 +266,7 @@
         </DialogModal>
 
         <!-- Manage Endpoints Modal -->
-        <DialogModal :show="showEndpointsModal" @close="showEndpointsModal = false" max-width="2xl">
+        <DialogModal class="bg-dark" :show="showEndpointsModal" @close="showEndpointsModal = false" max-width="2xl">
             <template #title>
                 Manage Endpoints for "{{ managingEvent?.name }}"
             </template>
@@ -279,9 +279,9 @@
                         class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
                     >
                         <div class="flex-1">
-                            <h4 class="font-medium text-gray-900 dark:text-white">{{ endpoint.name }}</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ endpoint.url }}</p>
-                            <p class="text-xs text-gray-400 dark:text-gray-500">
+                            <h4 class="font-medium text-gray-900 dark">{{ endpoint.name }}</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[40ch]">{{ endpoint.url }}</p>
+                            <p class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-[40ch]">
                                 {{ endpoint.description || 'No description' }}
                             </p>
                         </div>
