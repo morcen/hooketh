@@ -70,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('deliveries/stats', [DeliveryController::class, 'stats']);
     Route::get('deliveries/{delivery}', [DeliveryController::class, 'show']);
 
-    
+
     Route::post('deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery']);
 });
 Route::post('webhooks/trigger/{eventName}', [WebhookController::class, 'trigger'])

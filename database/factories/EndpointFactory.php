@@ -17,12 +17,12 @@ class EndpointFactory extends Factory
     public function definition(): array
     {
         $services = [
-            'Slack', 'Discord', 'Teams', 'Zapier', 'Shopify', 'Stripe', 
+            'Slack', 'Discord', 'Teams', 'Zapier', 'Shopify', 'Stripe',
             'PayPal', 'Mailchimp', 'SendGrid', 'Twilio', 'GitHub', 'GitLab'
         ];
-        
+
         $service = $this->faker->randomElement($services);
-        
+
         return [
             'name' => $service . ' ' . $this->faker->randomElement(['Integration', 'Webhook', 'Notifications', 'API']),
             'url' => $this->generateRealisticUrl($service),
@@ -31,7 +31,7 @@ class EndpointFactory extends Factory
             'is_active' => $this->faker->boolean(85), // 85% chance of being active
         ];
     }
-    
+
     private function generateRealisticUrl(string $service): string
     {
         $domains = [
@@ -48,13 +48,13 @@ class EndpointFactory extends Factory
             'GitHub' => 'api.github.com',
             'GitLab' => 'gitlab.com',
         ];
-        
+
         $domain = $domains[$service] ?? $this->faker->domainName();
         $path = '/webhook/' . $this->faker->uuid();
-        
+
         return 'https://' . $domain . $path;
     }
-    
+
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => [

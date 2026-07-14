@@ -18,7 +18,7 @@ Route::get('/health', function () {
         'timestamp' => now()->toISOString(),
         'services' => []
     ];
-    
+
     // Check database connection
     try {
         DB::connection()->getPdo();
@@ -27,7 +27,7 @@ Route::get('/health', function () {
         $health['status'] = 'error';
         $health['services']['database'] = 'disconnected';
     }
-    
+
     // Check Redis connection
     try {
         Redis::ping();
@@ -36,28 +36,28 @@ Route::get('/health', function () {
         $health['status'] = 'error';
         $health['services']['redis'] = 'disconnected';
     }
-    
+
     // Check PHP extensions
     $requiredExtensions = ['pgsql', 'pdo_pgsql', 'redis'];
     $missingExtensions = [];
-    
+
     foreach ($requiredExtensions as $extension) {
         if (!extension_loaded($extension)) {
             $missingExtensions[] = $extension;
         }
     }
-    
+
     if (!empty($missingExtensions)) {
         $health['status'] = 'error';
         $health['missing_extensions'] = $missingExtensions;
     }
-    
+
     $health['extensions'] = [
         'pgsql' => extension_loaded('pgsql'),
         'pdo_pgsql' => extension_loaded('pdo_pgsql'),
         'redis' => extension_loaded('redis'),
     ];
-    
+
     // Check queue worker via scheduler heartbeat
     $heartbeat = Redis::get('queue:heartbeat');
     $queueStatus = match(true) {

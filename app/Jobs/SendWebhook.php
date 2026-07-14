@@ -3,7 +3,6 @@
 namespace App\Jobs;
 
 use App\Models\Delivery;
-use App\Models\Endpoint;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -14,7 +13,9 @@ use Illuminate\Support\Facades\Log;
 
 class SendWebhook implements ShouldQueue
 {
-    use InteractsWithQueue, Queueable, SerializesModels;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     public $maxExceptions = 3;
 

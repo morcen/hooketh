@@ -44,7 +44,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run Pint (dry run)
-        run: vendor/bin/pint --test
+        run: vendor/bin/pint --test --preset=psr12
 
   test:
     name: Backend tests (PHPUnit)

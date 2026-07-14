@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Delivery;
-use App\Models\Endpoint;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,13 +18,13 @@ class DashboardController extends Controller
         $stats = [
             'endpoints' => $user->endpoints()->count(),
             'events' => $user->events()->count(),
-            'total_deliveries' => Delivery::whereHas('event', fn($q) => $q->where('user_id', $user->id))->count(),
-            'successful_deliveries' => Delivery::whereHas('event', fn($q) => $q->where('user_id', $user->id))->where('status', 'success')->count(),
+            'total_deliveries' => Delivery::whereHas('event', fn ($q) => $q->where('user_id', $user->id))->count(),
+            'successful_deliveries' => Delivery::whereHas('event', fn ($q) => $q->where('user_id', $user->id))->where('status', 'success')->count(),
         ];
 
         // Get recent deliveries
         $recentDeliveries = Delivery::with(['event', 'endpoint'])
-            ->whereHas('event', fn($q) => $q->where('user_id', $user->id))
+            ->whereHas('event', fn ($q) => $q->where('user_id', $user->id))
             ->latest()
             ->limit(10)
             ->get();
@@ -75,7 +74,7 @@ class DashboardController extends Controller
     public function deliveries(Request $request): Response
     {
         $query = Delivery::with(['event', 'endpoint'])
-            ->whereHas('event', fn($q) => $q->where('user_id', $request->user()->id));
+            ->whereHas('event', fn ($q) => $q->where('user_id', $request->user()->id));
 
         // Apply filters
         if ($request->has('status') && $request->status) {
