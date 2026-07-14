@@ -15,10 +15,10 @@ class EndpointController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'url'         => 'required|url|max:2048',
+            'name' => 'required|string|max:255',
+            'url' => 'required|url|max:2048',
             'description' => 'nullable|string|max:1000',
-            'is_active'   => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $endpoint = $request->user()->endpoints()->create($validated);
@@ -34,10 +34,10 @@ class EndpointController extends Controller
         abort_if($endpoint->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
-            'name'        => 'sometimes|string|max:255',
-            'url'         => 'sometimes|url|max:2048',
+            'name' => 'sometimes|string|max:255',
+            'url' => 'sometimes|url|max:2048',
             'description' => 'nullable|string|max:1000',
-            'is_active'   => 'boolean',
+            'is_active' => 'boolean',
         ]);
 
         $endpoint->update($validated);
@@ -62,22 +62,22 @@ class EndpointController extends Controller
             $response = Http::timeout(10)->post($endpoint->url, ['test' => true]);
 
             $testResult = [
-                'success'      => $response->successful(),
+                'success' => $response->successful(),
                 'response_code' => $response->status(),
-                'message'      => $response->body(),
+                'message' => $response->body(),
             ];
         } catch (\Exception $e) {
             $testResult = [
-                'success'      => false,
+                'success' => false,
                 'response_code' => null,
-                'message'      => $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
 
         $endpoints = $request->user()->endpoints()->with('events')->paginate(15);
 
         return Inertia::render('Endpoints/Index', [
-            'endpoints'  => $endpoints,
+            'endpoints' => $endpoints,
             'testResult' => $testResult,
         ]);
     }

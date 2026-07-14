@@ -33,9 +33,9 @@ class WebhookController extends Controller
             ->with('activeEndpoints')
             ->first();
 
-        if (!$event) {
+        if (! $event) {
             return response()->json([
-                'message' => 'Event not found'
+                'message' => 'Event not found',
             ], 404);
         }
 
@@ -98,9 +98,9 @@ class WebhookController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        if (!$delivery->isFailed()) {
+        if (! $delivery->isFailed()) {
             return response()->json([
-                'message' => 'Only failed deliveries can be retried'
+                'message' => 'Only failed deliveries can be retried',
             ], 400);
         }
 

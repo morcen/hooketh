@@ -18,10 +18,10 @@ class EventController extends Controller
                 'required', 'string', 'max:255',
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id),
             ],
-            'event_type'  => 'nullable|string|max:255',
+            'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'payload'     => 'nullable|array',
-            'schema'      => 'nullable|array',
+            'payload' => 'nullable|array',
+            'schema' => 'nullable|array',
         ]);
 
         $request->user()->events()->create($validated);
@@ -38,10 +38,10 @@ class EventController extends Controller
                 'required', 'string', 'max:255',
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id),
             ],
-            'event_type'  => 'nullable|string|max:255',
+            'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'payload'     => 'nullable|array',
-            'schema'      => 'nullable|array',
+            'payload' => 'nullable|array',
+            'schema' => 'nullable|array',
         ]);
 
         $event->update($validated);
@@ -63,7 +63,7 @@ class EventController extends Controller
         abort_if($event->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
-            'endpoint_ids'   => 'array',
+            'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
 
@@ -92,10 +92,10 @@ class EventController extends Controller
 
         foreach ($event->activeEndpoints()->get() as $endpoint) {
             $delivery = Delivery::create([
-                'event_id'    => $event->id,
+                'event_id' => $event->id,
                 'endpoint_id' => $endpoint->id,
-                'payload'     => $payload,
-                'status'      => 'pending',
+                'payload' => $payload,
+                'status' => 'pending',
             ]);
 
             SendWebhook::dispatch($delivery);

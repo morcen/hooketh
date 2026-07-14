@@ -50,19 +50,19 @@ Route::prefix('v1')
 // -------------------------------------------------------------------------
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('endpoints', EndpointController::class)->names([
-        'index'   => 'api.endpoints.index',
-        'store'   => 'api.endpoints.store',
-        'show'    => 'api.endpoints.show',
-        'update'  => 'api.endpoints.update',
+        'index' => 'api.endpoints.index',
+        'store' => 'api.endpoints.store',
+        'show' => 'api.endpoints.show',
+        'update' => 'api.endpoints.update',
         'destroy' => 'api.endpoints.destroy',
     ]);
     Route::post('endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret']);
 
     Route::apiResource('events', EventController::class)->names([
-        'index'   => 'api.events.index',
-        'store'   => 'api.events.store',
-        'show'    => 'api.events.show',
-        'update'  => 'api.events.update',
+        'index' => 'api.events.index',
+        'store' => 'api.events.store',
+        'show' => 'api.events.show',
+        'update' => 'api.events.update',
         'destroy' => 'api.events.destroy',
     ]);
 
@@ -70,8 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('deliveries/stats', [DeliveryController::class, 'stats']);
     Route::get('deliveries/{delivery}', [DeliveryController::class, 'show']);
 
-
     Route::post('deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery']);
 });
 Route::post('webhooks/trigger/{eventName}', [WebhookController::class, 'trigger'])
-        ->middleware('throttle:webhook-trigger');
+    ->middleware('throttle:webhook-trigger');

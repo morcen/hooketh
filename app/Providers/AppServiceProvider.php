@@ -24,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('webhook-trigger', function (Request $request) {
             return Limit::perMinute(config('webhooks.rate_limit', 60))
-                        ->by($request->user()?->id ?: $request->ip());
+                ->by($request->user()?->id ?: $request->ip());
         });
     }
 }

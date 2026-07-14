@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Delivery;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Delivery>
+ * @extends Factory<Delivery>
  */
 class DeliveryFactory extends Factory
 {
@@ -70,7 +71,7 @@ class DeliveryFactory extends Factory
                     'email' => $this->faker->safeEmail(),
                     'name' => $this->faker->name(),
                     'created_at' => $this->faker->iso8601(),
-                ]
+                ],
             ],
             // Order payload
             [
@@ -87,9 +88,9 @@ class DeliveryFactory extends Factory
                             'name' => $this->faker->words(3, true),
                             'quantity' => $this->faker->numberBetween(1, 5),
                             'price' => $this->faker->randomFloat(2, 5, 200),
-                        ]
+                        ],
                     ],
-                ]
+                ],
             ],
             // Payment payload
             [
@@ -101,7 +102,7 @@ class DeliveryFactory extends Factory
                     'method' => $this->faker->randomElement(['credit_card', 'paypal', 'bank_transfer']),
                     'status' => 'completed',
                     'processed_at' => $this->faker->iso8601(),
-                ]
+                ],
             ],
         ];
 

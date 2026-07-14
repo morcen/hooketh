@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Delivery;
 use App\Models\Endpoint;
 use App\Models\Event;
-use App\Models\Delivery;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class WebhookSeeder extends Seeder
@@ -18,8 +18,9 @@ class WebhookSeeder extends Seeder
         // Get the test user
         $user = User::where('email', 'test@example.com')->first();
 
-        if (!$user) {
+        if (! $user) {
             $this->command->error('Test user not found. Please run the main seeder first.');
+
             return;
         }
 
@@ -31,37 +32,37 @@ class WebhookSeeder extends Seeder
                 'name' => 'Payment Processing Service',
                 'url' => 'https://api.paymentservice.com/webhooks/payment',
                 'description' => 'Handles payment-related webhooks including successful payments, failures, and refunds',
-                'secret_key' => 'payment_secret_' . bin2hex(random_bytes(16)),
+                'secret_key' => 'payment_secret_'.bin2hex(random_bytes(16)),
                 'is_active' => true,
             ],
             [
                 'name' => 'User Management System',
                 'url' => 'https://api.usermgmt.com/webhook/user-events',
                 'description' => 'Receives user lifecycle events such as registration, profile updates, and account deletions',
-                'secret_key' => 'user_secret_' . bin2hex(random_bytes(16)),
+                'secret_key' => 'user_secret_'.bin2hex(random_bytes(16)),
                 'is_active' => true,
             ],
             [
                 'name' => 'Order Fulfillment API',
                 'url' => 'https://fulfillment.example.com/webhooks/orders',
                 'description' => 'Processes order status updates and fulfillment notifications',
-                'secret_key' => 'order_secret_' . bin2hex(random_bytes(16)),
+                'secret_key' => 'order_secret_'.bin2hex(random_bytes(16)),
                 'is_active' => true,
             ],
             [
                 'name' => 'Email Marketing Platform',
                 'url' => 'https://marketing.example.com/api/webhooks',
                 'description' => 'Receives customer behavior events for marketing automation',
-                'secret_key' => 'marketing_secret_' . bin2hex(random_bytes(16)),
+                'secret_key' => 'marketing_secret_'.bin2hex(random_bytes(16)),
                 'is_active' => false, // Temporarily disabled
             ],
             [
                 'name' => 'Analytics Dashboard',
                 'url' => 'https://analytics.internal.com/webhook/events',
                 'description' => 'Collects business events for real-time analytics and reporting',
-                'secret_key' => 'analytics_secret_' . bin2hex(random_bytes(16)),
+                'secret_key' => 'analytics_secret_'.bin2hex(random_bytes(16)),
                 'is_active' => true,
-            ]
+            ],
         ];
 
         foreach ($endpoints as $endpointData) {
@@ -70,7 +71,7 @@ class WebhookSeeder extends Seeder
                 ->create($endpointData);
         }
 
-        $this->command->info('Created ' . count($endpoints) . ' endpoints.');
+        $this->command->info('Created '.count($endpoints).' endpoints.');
 
         // Get all created endpoints
         $createdEndpoints = Endpoint::where('user_id', $user->id)->get();
@@ -83,7 +84,7 @@ class WebhookSeeder extends Seeder
             'order.created', 'order.updated', 'order.cancelled', 'order.fulfilled',
             'payment.success', 'payment.failed', 'payment.refunded',
             'product.created', 'product.updated', 'product.deleted',
-            'subscription.created', 'subscription.cancelled', 'subscription.renewed'
+            'subscription.created', 'subscription.cancelled', 'subscription.renewed',
         ];
 
         $totalEvents = 0;
@@ -97,9 +98,9 @@ class WebhookSeeder extends Seeder
                 $event = Event::factory()
                     ->for($user)
                     ->create([
-                        'name' => $eventType . '_' . time() . '_' . rand(1000, 9999),
+                        'name' => $eventType.'_'.time().'_'.rand(1000, 9999),
                         'event_type' => $eventType,
-                        'description' => 'Triggered when ' . str_replace('.', ' ', $eventType) . ' occurs',
+                        'description' => 'Triggered when '.str_replace('.', ' ', $eventType).' occurs',
                     ]);
 
                 // Attach this event to 1-3 random endpoints
@@ -140,9 +141,9 @@ class WebhookSeeder extends Seeder
             $event = Event::factory()
                 ->for($user)
                 ->create([
-                    'name' => $eventType . '_recent_' . time() . '_' . rand(1000, 9999),
+                    'name' => $eventType.'_recent_'.time().'_'.rand(1000, 9999),
                     'event_type' => $eventType,
-                    'description' => 'Recent ' . str_replace('.', ' ', $eventType) . ' event',
+                    'description' => 'Recent '.str_replace('.', ' ', $eventType).' event',
                     'created_at' => $createdAt,
                 ]);
 
@@ -179,9 +180,9 @@ class WebhookSeeder extends Seeder
 
         // Display summary
         $this->command->info('\n=== Seeding Summary ===');
-        $this->command->info('Endpoints: ' . Endpoint::count());
-        $this->command->info('Events: ' . Event::count());
-        $this->command->info('Deliveries: ' . Delivery::count());
-        $this->command->info('Success rate: ' . round((Delivery::where('status', 'success')->count() / Delivery::count()) * 100, 1) . '%');
+        $this->command->info('Endpoints: '.Endpoint::count());
+        $this->command->info('Events: '.Event::count());
+        $this->command->info('Deliveries: '.Delivery::count());
+        $this->command->info('Success rate: '.round((Delivery::where('status', 'success')->count() / Delivery::count()) * 100, 1).'%');
     }
 }

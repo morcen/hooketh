@@ -14,6 +14,7 @@ class Endpoint extends Model
 {
     use HasFactory;
     use SoftDeletes;
+
     protected $fillable = [
         'user_id',
         'name',

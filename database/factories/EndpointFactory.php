@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Endpoint;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Endpoint>
+ * @extends Factory<Endpoint>
  */
 class EndpointFactory extends Factory
 {
@@ -18,13 +19,13 @@ class EndpointFactory extends Factory
     {
         $services = [
             'Slack', 'Discord', 'Teams', 'Zapier', 'Shopify', 'Stripe',
-            'PayPal', 'Mailchimp', 'SendGrid', 'Twilio', 'GitHub', 'GitLab'
+            'PayPal', 'Mailchimp', 'SendGrid', 'Twilio', 'GitHub', 'GitLab',
         ];
 
         $service = $this->faker->randomElement($services);
 
         return [
-            'name' => $service . ' ' . $this->faker->randomElement(['Integration', 'Webhook', 'Notifications', 'API']),
+            'name' => $service.' '.$this->faker->randomElement(['Integration', 'Webhook', 'Notifications', 'API']),
             'url' => $this->generateRealisticUrl($service),
             'secret_key' => $this->faker->sha256(),
             'description' => $this->faker->sentence(10),
@@ -50,9 +51,9 @@ class EndpointFactory extends Factory
         ];
 
         $domain = $domains[$service] ?? $this->faker->domainName();
-        $path = '/webhook/' . $this->faker->uuid();
+        $path = '/webhook/'.$this->faker->uuid();
 
-        return 'https://' . $domain . $path;
+        return 'https://'.$domain.$path;
     }
 
     public function inactive(): static
