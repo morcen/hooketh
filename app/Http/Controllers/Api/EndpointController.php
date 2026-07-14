@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Endpoint;
-use Illuminate\Http\Request;
+use App\Rules\SafeWebhookUrl;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -30,7 +31,7 @@ class EndpointController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'url' => 'required|url|max:2048',
+            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -77,7 +78,7 @@ class EndpointController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
-            'url' => 'url|max:2048',
+            'url' => ['url', 'max:2048', new SafeWebhookUrl],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);

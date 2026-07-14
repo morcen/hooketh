@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Delivery;
+use App\Rules\SafeWebhookUrl;
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -43,8 +44,27 @@ class SendWebhook implements ShouldQueue
 
         $endpoint = $this->delivery->endpoint;
 
-        if (!$endpoint || $endpoint->trashed()) {
+        if (! $endpoint || $endpoint->trashed()) {
             $this->delivery->update(['status' => 'failed', 'response_body' => 'Endpoint was deleted.']);
+
+            return;
+        }
+
+        if (! SafeWebhookUrl::isUrlSafe($endpoint->url)) {
+            Log::warning('Webhook delivery blocked: endpoint URL resolves to a disallowed network address', [
+                'delivery_id' => $this->delivery->id,
+                'endpoint_url' => $endpoint->url,
+            ]);
+
+            $this->delivery->update([
+                'status' => 'failed',
+                'response_code' => null,
+                'response_body' => 'Delivery blocked: endpoint URL resolves to a private, loopback, or reserved network address.',
+                'delivered_at' => null,
+            ]);
+
+            $this->handleFailedDelivery();
+
             return;
         }
 
@@ -53,6 +73,7 @@ class SendWebhook implements ShouldQueue
         try {
             $start = microtime(true);
             $response = Http::timeout(30)
+                ->withOptions(['allow_redirects' => false])
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'X-Webhook-Secret' => hash_hmac('sha256', json_encode($payload), $endpoint->secret_key),
