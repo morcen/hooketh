@@ -50,7 +50,9 @@ class SendWebhook implements ShouldQueue
             return;
         }
 
-        if (! SafeWebhookUrl::isUrlSafe($endpoint->url)) {
+        $safeIp = SafeWebhookUrl::resolveSafeIp($endpoint->url);
+
+        if ($safeIp === null) {
             Log::warning('Webhook delivery blocked: endpoint URL resolves to a disallowed network address', [
                 'delivery_id' => $this->delivery->id,
                 'endpoint_url' => $endpoint->url,
@@ -70,10 +72,24 @@ class SendWebhook implements ShouldQueue
 
         $payload = $this->delivery->payload;
 
+        // Pin the connection to the IP address that was just validated,
+        // rather than letting curl re-resolve the hostname at request time.
+        // Without this, an attacker controlling DNS for the endpoint's
+        // domain could return a safe IP for validation and a private/
+        // internal one moments later for the actual connection.
+        $urlParts = parse_url($endpoint->url);
+        $host = trim($urlParts['host'] ?? '', '[]');
+        $port = $urlParts['port'] ?? (strtolower($urlParts['scheme'] ?? '') === 'https' ? 443 : 80);
+
         try {
             $start = microtime(true);
             $response = Http::timeout(30)
-                ->withOptions(['allow_redirects' => false])
+                ->withOptions([
+                    'allow_redirects' => false,
+                    'curl' => [
+                        CURLOPT_RESOLVE => ["{$host}:{$port}:{$safeIp}"],
+                    ],
+                ])
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'X-Webhook-Secret' => hash_hmac('sha256', json_encode($payload), $endpoint->secret_key),
