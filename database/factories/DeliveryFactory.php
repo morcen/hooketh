@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Delivery;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Delivery>
+ * @extends Factory<Delivery>
  */
 class DeliveryFactory extends Factory
 {
@@ -22,7 +23,7 @@ class DeliveryFactory extends Factory
         $deliveredAt = null;
         $nextRetryAt = null;
         $attemptCount = $this->faker->numberBetween(1, 5);
-        
+
         // Set realistic response codes and bodies based on status
         switch ($status) {
             case 'success':
@@ -30,24 +31,24 @@ class DeliveryFactory extends Factory
                 $responseBody = json_encode(['status' => 'ok', 'message' => 'Webhook received successfully']);
                 $deliveredAt = $this->faker->dateTimeBetween('-30 days', 'now');
                 break;
-                
+
             case 'failed':
                 $responseCode = $this->faker->randomElement([400, 404, 500, 502, 503]);
                 $responseBody = $this->generateErrorResponse($responseCode);
                 $nextRetryAt = $this->faker->dateTimeBetween('now', '+2 hours');
                 break;
-                
+
             case 'pending':
                 $attemptCount = 0;
                 break;
-                
+
             case 'retrying':
                 $responseCode = $this->faker->randomElement([500, 502, 503, 504]);
                 $responseBody = $this->generateErrorResponse($responseCode);
                 $nextRetryAt = $this->faker->dateTimeBetween('now', '+1 hour');
                 break;
         }
-        
+
         return [
             'payload' => $this->generateRealisticPayload(),
             'status' => $status,
@@ -58,7 +59,7 @@ class DeliveryFactory extends Factory
             'next_retry_at' => $nextRetryAt,
         ];
     }
-    
+
     private function generateRealisticPayload(): array
     {
         $payloadTypes = [
@@ -70,7 +71,7 @@ class DeliveryFactory extends Factory
                     'email' => $this->faker->safeEmail(),
                     'name' => $this->faker->name(),
                     'created_at' => $this->faker->iso8601(),
-                ]
+                ],
             ],
             // Order payload
             [
@@ -87,9 +88,9 @@ class DeliveryFactory extends Factory
                             'name' => $this->faker->words(3, true),
                             'quantity' => $this->faker->numberBetween(1, 5),
                             'price' => $this->faker->randomFloat(2, 5, 200),
-                        ]
+                        ],
                     ],
-                ]
+                ],
             ],
             // Payment payload
             [
@@ -101,17 +102,17 @@ class DeliveryFactory extends Factory
                     'method' => $this->faker->randomElement(['credit_card', 'paypal', 'bank_transfer']),
                     'status' => 'completed',
                     'processed_at' => $this->faker->iso8601(),
-                ]
+                ],
             ],
         ];
-        
+
         $payload = $this->faker->randomElement($payloadTypes);
         $payload['timestamp'] = $this->faker->iso8601();
         $payload['webhook_id'] = $this->faker->uuid();
-        
+
         return $payload;
     }
-    
+
     private function generateErrorResponse(int $code): string
     {
         $errorMessages = [
@@ -122,10 +123,10 @@ class DeliveryFactory extends Factory
             503 => ['error' => 'Service Unavailable', 'message' => 'Service temporarily unavailable'],
             504 => ['error' => 'Gateway Timeout', 'message' => 'Request timeout'],
         ];
-        
+
         return json_encode($errorMessages[$code] ?? ['error' => 'Unknown Error', 'message' => 'An unknown error occurred']);
     }
-    
+
     public function successful(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -136,7 +137,7 @@ class DeliveryFactory extends Factory
             'next_retry_at' => null,
         ]);
     }
-    
+
     public function failed(): static
     {
         return $this->state(fn (array $attributes) => [

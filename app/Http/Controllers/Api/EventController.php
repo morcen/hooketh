@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class EventController extends Controller
@@ -51,7 +51,7 @@ class EventController extends Controller
         $event = $request->user()->events()->create($data);
 
         // Attach endpoints that belong to the user
-        if (!empty($endpointIds)) {
+        if (! empty($endpointIds)) {
             $userEndpointIds = $request->user()->endpoints()
                 ->whereIn('id', $endpointIds)
                 ->pluck('id');
@@ -74,7 +74,7 @@ class EventController extends Controller
             'endpoints',
             'deliveries' => function ($query) {
                 $query->with('endpoint')->latest()->limit(20);
-            }
+            },
         ]));
     }
 
@@ -88,7 +88,7 @@ class EventController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'string|max:255|unique:events,name,' . $event->id,
+            'name' => 'string|max:255|unique:events,name,'.$event->id,
             'description' => 'nullable|string|max:1000',
             'schema' => 'nullable|array',
             'endpoint_ids' => 'array',

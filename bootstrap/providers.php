@@ -1,8 +1,13 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\FortifyServiceProvider;
+use App\Providers\JetstreamServiceProvider;
+use App\Providers\TelescopeServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\FortifyServiceProvider::class,
-    App\Providers\JetstreamServiceProvider::class,
-    App\Providers\TelescopeServiceProvider::class,
+    AppServiceProvider::class,
+    FortifyServiceProvider::class,
+    JetstreamServiceProvider::class,
+    TelescopeServiceProvider::class,
 ];

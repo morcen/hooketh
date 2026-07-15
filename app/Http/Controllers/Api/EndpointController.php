@@ -31,7 +31,7 @@ class EndpointController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl],
+            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl()],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -78,7 +78,7 @@ class EndpointController extends Controller
 
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
-            'url' => ['url', 'max:2048', new SafeWebhookUrl],
+            'url' => ['url', 'max:2048', new SafeWebhookUrl()],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);

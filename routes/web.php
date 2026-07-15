@@ -3,9 +3,9 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EndpointController;
 use App\Http\Controllers\EventController;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -16,9 +16,9 @@ Route::get('/health', function () {
     $health = [
         'status' => 'ok',
         'timestamp' => now()->toISOString(),
-        'services' => []
+        'services' => [],
     ];
-    
+
     // Check database connection
     try {
         DB::connection()->getPdo();
@@ -27,7 +27,7 @@ Route::get('/health', function () {
         $health['status'] = 'error';
         $health['services']['database'] = 'disconnected';
     }
-    
+
     // Check Redis connection
     try {
         Redis::ping();
@@ -36,34 +36,34 @@ Route::get('/health', function () {
         $health['status'] = 'error';
         $health['services']['redis'] = 'disconnected';
     }
-    
+
     // Check PHP extensions
     $requiredExtensions = ['pgsql', 'pdo_pgsql', 'redis'];
     $missingExtensions = [];
-    
+
     foreach ($requiredExtensions as $extension) {
-        if (!extension_loaded($extension)) {
+        if (! extension_loaded($extension)) {
             $missingExtensions[] = $extension;
         }
     }
-    
-    if (!empty($missingExtensions)) {
+
+    if (! empty($missingExtensions)) {
         $health['status'] = 'error';
         $health['missing_extensions'] = $missingExtensions;
     }
-    
+
     $health['extensions'] = [
         'pgsql' => extension_loaded('pgsql'),
         'pdo_pgsql' => extension_loaded('pdo_pgsql'),
         'redis' => extension_loaded('redis'),
     ];
-    
+
     // Check queue worker via scheduler heartbeat
     $heartbeat = Redis::get('queue:heartbeat');
-    $queueStatus = match(true) {
-        $heartbeat === null                              => 'unknown',
-        (now()->timestamp - (int) $heartbeat) <= 120    => 'ok',
-        default                                          => 'stale',
+    $queueStatus = match (true) {
+        $heartbeat === null => 'unknown',
+        (now()->timestamp - (int) $heartbeat) <= 120 => 'ok',
+        default => 'stale',
     };
     $health['services']['queue_worker'] = $queueStatus;
     if ($queueStatus === 'stale') {
@@ -71,6 +71,7 @@ Route::get('/health', function () {
     }
 
     $status = $health['status'] === 'ok' ? 200 : 503;
+
     return response()->json($health, $status);
 });
 

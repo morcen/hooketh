@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Delivery extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'event_id',
         'endpoint_id',
@@ -56,7 +57,7 @@ class Delivery extends Model
     public function scopeReadyForRetry($query)
     {
         return $query->where('status', 'failed')
-                    ->where('next_retry_at', '<=', now());
+            ->where('next_retry_at', '<=', now());
     }
 
     public function isSuccessful(): bool

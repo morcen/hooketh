@@ -34,6 +34,7 @@ class ProcessWebhookRetries extends Command
 
         if ($retriesCount === 0) {
             $this->info('No deliveries ready for retry.');
+
             return Command::SUCCESS;
         }
 

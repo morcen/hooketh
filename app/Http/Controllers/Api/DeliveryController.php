@@ -81,7 +81,7 @@ class DeliveryController extends Controller
             'retrying' => (clone $baseQuery)->where('status', 'retrying')->count(),
         ];
 
-        $stats['success_rate'] = $stats['total'] > 0 
+        $stats['success_rate'] = $stats['total'] > 0
             ? round(($stats['successful'] / $stats['total']) * 100, 2)
             : 0;
 

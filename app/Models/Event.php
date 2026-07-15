@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
+
     protected $fillable = [
         'user_id',
         'name',
@@ -23,7 +25,7 @@ class Event extends Model
 
     protected $casts = [
         'payload' => 'array',
-        'schema'  => 'array',
+        'schema' => 'array',
     ];
 
     public function user(): BelongsTo
