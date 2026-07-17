@@ -8,12 +8,9 @@ services:
       POSTGRES_DB: webhook_management
       POSTGRES_USER: webhook_user
       POSTGRES_PASSWORD: webhook_password
-      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
     networks:
       - webhook-network
 
@@ -22,11 +19,9 @@ services:
     image: redis:7-alpine
     container_name: webhook_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass webhook_redis_password
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
     networks:
       - webhook-network
 
@@ -51,6 +46,7 @@ services:
       - DB_PASSWORD=webhook_password
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=webhook_redis_password
       - QUEUE_CONNECTION=redis
       - CACHE_DRIVER=redis
       - SESSION_DRIVER=redis
@@ -81,6 +77,7 @@ services:
       - DB_PASSWORD=webhook_password
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=webhook_redis_password
       - QUEUE_CONNECTION=redis
     volumes:
       - storage_data:/var/www/html/storage
@@ -109,6 +106,7 @@ services:
       - DB_PASSWORD=webhook_password
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PASSWORD=webhook_redis_password
       - QUEUE_CONNECTION=redis
     volumes:
       - storage_data:/var/www/html/storage

@@ -214,7 +214,7 @@ All services communicate through the `webhook-network` bridge network:
 
 - Services can communicate using service names (e.g., `app`, `db`, `redis`)
 - External access is provided through Nginx on port 80/443
-- Database and Redis are accessible on standard ports for debugging
+- Database and Redis are not published to the host in the base `docker-compose.yml`; `docker-compose.override.yml` (development only) publishes them on their standard ports for local debugging
 
 ## Resource Management
 
@@ -238,7 +238,7 @@ All services communicate through the `webhook-network` bridge network:
 ### Environment Variables
 - The main `.env` file is copied into containers during build
 - Secrets should be managed through the `.env` file
-- Database passwords should be changed in production
+- Database and Redis passwords should be changed in production
 - SSL certificates should be mounted for HTTPS
 - APP_KEY is required and must be generated before building containers
 
