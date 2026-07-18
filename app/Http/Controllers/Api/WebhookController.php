@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendWebhook;
 use App\Models\Delivery;
 use App\Models\Event;
+use App\Rules\WebhookPayloadSize;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -18,7 +19,7 @@ class WebhookController extends Controller
     public function trigger(Request $request, string $eventName): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'payload' => 'required|array',
+            'payload' => ['required', 'array', new WebhookPayloadSize],
         ]);
 
         if ($validator->fails()) {
