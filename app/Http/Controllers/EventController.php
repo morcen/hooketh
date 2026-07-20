@@ -82,7 +82,7 @@ class EventController extends Controller
         abort_if($event->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
-            'payload' => ['required', 'array', new WebhookPayloadSize],
+            'payload' => ['required', 'array', new WebhookPayloadSize()],
         ]);
 
         $payload = $validated['payload'];
