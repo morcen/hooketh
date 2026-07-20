@@ -17,7 +17,7 @@ class EndpointController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl],
+            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl()],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -36,7 +36,7 @@ class EndpointController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'url' => ['sometimes', 'url', 'max:2048', new SafeWebhookUrl],
+            'url' => ['sometimes', 'url', 'max:2048', new SafeWebhookUrl()],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);

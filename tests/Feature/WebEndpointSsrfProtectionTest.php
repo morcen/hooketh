@@ -66,7 +66,8 @@ class WebEndpointSsrfProtectionTest extends TestCase
         $response = $this->actingAs($user)->post("/endpoints/{$endpoint->id}/test");
 
         Http::assertNothingSent();
-        $response->assertInertia(fn ($page) => $page
+        $response->assertInertia(
+            fn ($page) => $page
             ->where('testResult.success', false)
             ->where('testResult.response_code', null)
         );
@@ -82,7 +83,8 @@ class WebEndpointSsrfProtectionTest extends TestCase
         $response = $this->actingAs($user)->post("/endpoints/{$endpoint->id}/test");
 
         Http::assertSent(fn ($request) => $request->url() === 'http://8.8.8.8/webhook');
-        $response->assertInertia(fn ($page) => $page
+        $response->assertInertia(
+            fn ($page) => $page
             ->where('testResult.success', true)
             ->where('testResult.response_code', 200)
         );
