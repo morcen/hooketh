@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendWebhook;
 use App\Models\Delivery;
 use App\Models\Event;
+use App\Rules\WebhookPayloadSize;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -81,7 +82,7 @@ class EventController extends Controller
         abort_if($event->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
-            'payload' => 'required|array',
+            'payload' => ['required', 'array', new WebhookPayloadSize()],
         ]);
 
         $payload = $validated['payload'];

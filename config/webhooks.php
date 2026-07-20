@@ -30,4 +30,14 @@ return [
     */
     'rate_limit' => (int) env('WEBHOOK_RATE_LIMIT', 60),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook Payload Max Size
+    |--------------------------------------------------------------------------
+    | Maximum size, in bytes, of a trigger request's JSON-encoded payload.
+    | Prevents a single trigger from being amplified into excessive
+    | bandwidth/CPU cost across every active endpoint and retry attempt.
+    */
+    'payload_max_size' => (int) env('WEBHOOK_PAYLOAD_MAX_SIZE', 102400),
+
 ];

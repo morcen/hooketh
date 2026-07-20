@@ -96,4 +96,5 @@ Tests use SQLite in-memory with `QUEUE_CONNECTION=sync`, so `SendWebhook` jobs r
 WEBHOOK_MAX_RETRIES=5
 WEBHOOK_BACKOFF_DELAYS=60,300,900,1800,3600   # seconds per attempt
 WEBHOOK_RATE_LIMIT=60                          # trigger requests per minute per user
+WEBHOOK_PAYLOAD_MAX_SIZE=102400                # max JSON-encoded trigger payload size, in bytes
 ```
