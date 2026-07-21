@@ -30,6 +30,7 @@ class Endpoint extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'secret_key' => 'encrypted',
     ];
 
     protected static function booted(): void
