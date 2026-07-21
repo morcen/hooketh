@@ -38,7 +38,7 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-> **Important**: The Docker setup uses your local `.env` file from the project root. Ensure this file exists and is properly configured before building containers.
+> **Important**: The Docker setup uses your local `.env` file from the project root. It is never copied into the built image (it's listed in `.dockerignore`) — `docker-compose.yml` instead injects it into each container at runtime via `env_file`. Ensure this file exists and is properly configured before starting containers.
 
 3. **Run the setup script**
 ```bash
@@ -236,11 +236,11 @@ All services communicate through the `webhook-network` bridge network:
 - Sensitive files are excluded via `.dockerignore`
 
 ### Environment Variables
-- The main `.env` file is copied into containers during build
+- The main `.env` file is never baked into the image; `docker-compose.yml` injects it into each container at start time via `env_file`, so secrets aren't persisted in any built image layer
 - Secrets should be managed through the `.env` file
 - Database and Redis passwords should be changed in production
 - SSL certificates should be mounted for HTTPS
-- APP_KEY is required and must be generated before building containers
+- APP_KEY is required and must be generated before starting containers
 
 ## Troubleshooting
 
@@ -248,7 +248,7 @@ All services communicate through the `webhook-network` bridge network:
 
 **Missing .env file**
 ```bash
-# Error: .env file not found during Docker build
+# Error: .env file not found (docker-compose complains it can't find the env_file)
 # Solution: Create .env file from template
 cp .env.example .env
 php artisan key:generate
