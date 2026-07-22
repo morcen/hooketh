@@ -38,6 +38,20 @@ class WebEndpointSsrfProtectionTest extends TestCase
         $this->assertDatabaseCount('endpoints', 0);
     }
 
+    public function test_creating_endpoint_via_dashboard_with_nat64_embedded_metadata_url_is_rejected(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+
+        // 64:ff9b::a9fe:a9fe is the NAT64 well-known-prefix form of 169.254.169.254.
+        $response = $this->actingAs($user)->post('/endpoints', [
+            'name' => 'NAT64 Metadata Endpoint',
+            'url' => 'http://[64:ff9b::a9fe:a9fe]/latest/meta-data/',
+        ]);
+
+        $response->assertSessionHasErrors('url');
+        $this->assertDatabaseCount('endpoints', 0);
+    }
+
     public function test_updating_endpoint_via_dashboard_to_private_network_url_is_rejected(): void
     {
         $user = User::factory()->withPersonalTeam()->create();
@@ -68,8 +82,8 @@ class WebEndpointSsrfProtectionTest extends TestCase
         Http::assertNothingSent();
         $response->assertInertia(
             fn ($page) => $page
-            ->where('testResult.success', false)
-            ->where('testResult.response_code', null)
+                ->where('testResult.success', false)
+                ->where('testResult.response_code', null)
         );
     }
 
@@ -85,8 +99,8 @@ class WebEndpointSsrfProtectionTest extends TestCase
         Http::assertSent(fn ($request) => $request->url() === 'http://8.8.8.8/webhook');
         $response->assertInertia(
             fn ($page) => $page
-            ->where('testResult.success', true)
-            ->where('testResult.response_code', 200)
+                ->where('testResult.success', true)
+                ->where('testResult.response_code', 200)
         );
     }
 }
