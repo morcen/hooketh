@@ -31,13 +31,17 @@ WEBHOOK_README.md
 ehthumbs.db
 Thumbs.db
 
+# Secrets - never bake real credentials into an image layer
+.env
+.env.*
+!.env.example
+
 # Laravel
 /node_modules
 /public/hot
 /public/storage
 /storage/*.key
 /vendor
-!.env.example
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
