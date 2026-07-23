@@ -14,7 +14,12 @@ class SafeWebhookUrl implements ValidationRule
 {
     /**
      * IANA special-purpose ranges not excluded by PHP's
-     * FILTER_FLAG_NO_PRIV_RANGE / FILTER_FLAG_NO_RES_RANGE flags.
+     * FILTER_FLAG_NO_PRIV_RANGE / FILTER_FLAG_NO_RES_RANGE flags, plus IPv6
+     * transition mechanisms that can embed an arbitrary IPv4 address in
+     * their low bits. Blocking these prefixes outright prevents an attacker
+     * from smuggling a loopback/private/link-local IPv4 target past the
+     * IPv4-only checks below via a NAT64, 6to4, Teredo, or IPv4-compatible
+     * IPv6 literal.
      *
      * @var array<int, string>
      */
@@ -23,6 +28,11 @@ class SafeWebhookUrl implements ValidationRule
         '192.0.0.0/24',  // IETF protocol assignments
         '192.0.2.0/24',  // TEST-NET-1
         '198.18.0.0/15', // benchmarking
+        '64:ff9b::/96',  // RFC 6052 NAT64 well-known prefix
+        '64:ff9b:1::/48', // RFC 8215 NAT64 local-use prefix
+        '2002::/16',     // RFC 3056 6to4
+        '2001::/32',     // RFC 4380 Teredo
+        '::/96',         // deprecated IPv4-compatible IPv6 (::a.b.c.d)
     ];
 
     public function validate(string $attribute, mixed $value, Closure $fail): void

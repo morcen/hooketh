@@ -70,4 +70,28 @@ class SafeWebhookUrlTest extends TestCase
     {
         $this->assertNull(SafeWebhookUrl::resolveSafeIp('http://100.64.0.1/webhook'));
     }
+
+    public function test_ipv4_embedded_in_ipv6_transition_prefixes_are_unsafe(): void
+    {
+        // NAT64 well-known prefix (RFC 6052) embedding 127.0.0.1 and the cloud metadata IP.
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://[64:ff9b::7f00:1]/webhook'));
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://[64:ff9b::a9fe:a9fe]/webhook'));
+
+        // NAT64 local-use prefix (RFC 8215).
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://[64:ff9b:1::7f00:1]/webhook'));
+
+        // 6to4 (RFC 3056) embedding 127.0.0.1.
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://[2002:7f00:0001::]/webhook'));
+
+        // Teredo (RFC 4380).
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://[2001::7f00:1]/webhook'));
+
+        // Deprecated IPv4-compatible IPv6.
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://[::127.0.0.1]/webhook'));
+    }
+
+    public function test_public_ipv6_address_outside_transition_prefixes_is_still_safe(): void
+    {
+        $this->assertTrue(SafeWebhookUrl::isUrlSafe('http://[2001:4860:4860::8888]/webhook'));
+    }
 }
