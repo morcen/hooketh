@@ -44,12 +44,12 @@ Before contributing, make sure you have:
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/webhook-management-platform.git
-   cd webhook-management-platform
+   git clone https://github.com/YOUR_USERNAME/hooketh.git
+   cd hooketh
    ```
 3. **Add the upstream remote**:
    ```bash
-   git remote add upstream https://github.com/original-repo/webhook-management-platform.git
+   git remote add upstream https://github.com/original-repo/hooketh.git
    ```
 4. **Set up the development environment**:
    ```bash
@@ -204,47 +204,6 @@ class WebhookDeliveryService
         ];
     }
 }
-```
-
-### Vue.js/JavaScript Standards
-We use ESLint with Vue.js best practices:
-
-```vue
-<template>
-  <div class="webhook-endpoint">
-    <h2 class="text-xl font-semibold">
-      {{ endpoint.name }}
-    </h2>
-    <p class="text-gray-600">
-      {{ endpoint.description }}
-    </p>
-    <button 
-      @click="toggleStatus"
-      class="btn"
-      :class="endpoint.is_active ? 'btn-success' : 'btn-warning'"
-    >
-      {{ endpoint.is_active ? 'Active' : 'Inactive' }}
-    </button>
-  </div>
-</template>
-
-<script setup>
-import { computed } from 'vue'
-import { router } from '@inertiajs/vue3'
-
-const props = defineProps({
-  endpoint: {
-    type: Object,
-    required: true
-  }
-})
-
-const toggleStatus = () => {
-  router.patch(`/endpoints/${props.endpoint.id}`, {
-    is_active: !props.endpoint.is_active
-  })
-}
-</script>
 ```
 
 ### Database Standards

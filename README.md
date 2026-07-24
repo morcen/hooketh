@@ -51,7 +51,7 @@
 1. **Clone the repository**
    ```bash
    git clone https://github.com/morcen/hooketh.git
-   cd webhook-management-platform
+   cd hooketh
    ```
 
 2. **Set up environment configuration**
@@ -78,7 +78,6 @@
 
 4. **Access the application**
    - **Web Interface**: http://localhost:8080
-   - **API Documentation**: http://localhost:8080/api/docs
    - **Email Testing**: http://localhost:8025 (MailHog)
 
 5. **Default Login**
@@ -104,7 +103,6 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed development instructions.
 - **[Development Guide](DEVELOPMENT.md)** - Detailed development setup and workflows
 - **[Docker Documentation](DOCKER.md)** - Docker setup, commands, and configuration
 - **[Deployment Guide](DEPLOYMENT.md)** - Cloud deployment instructions and troubleshooting
-- **[API Documentation](API.md)** - REST API endpoints and examples
 - **[Architecture Overview](ARCHITECTURE.md)** - System design and components
 
 ## 🛠️ Tech Stack
