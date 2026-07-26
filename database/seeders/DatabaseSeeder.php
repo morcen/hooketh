@@ -13,6 +13,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->warn('Skipping DatabaseSeeder: refusing to seed the default test@example.com account in production.');
+
+            return;
+        }
+
         // User::factory(10)->withPersonalTeam()->create();
 
         User::factory()->withPersonalTeam()->create([
