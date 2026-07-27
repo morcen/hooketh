@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendWebhook;
 use App\Models\Delivery;
 use App\Models\Event;
+use App\Rules\ValidEventSchema;
 use App\Rules\WebhookPayloadSize;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => 'nullable|array',
+            'schema' => ['nullable', 'array', new ValidEventSchema()],
         ]);
 
         $request->user()->events()->create($validated);
@@ -42,7 +43,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => 'nullable|array',
+            'schema' => ['nullable', 'array', new ValidEventSchema()],
         ]);
 
         $event->update($validated);
