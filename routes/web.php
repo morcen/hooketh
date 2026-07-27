@@ -85,7 +85,9 @@ Route::middleware([
     Route::post('/endpoints', [EndpointController::class, 'store'])->name('endpoints.store');
     Route::match(['put', 'patch'], '/endpoints/{endpoint}', [EndpointController::class, 'update'])->name('endpoints.update');
     Route::delete('/endpoints/{endpoint}', [EndpointController::class, 'destroy'])->name('endpoints.destroy');
-    Route::post('/endpoints/{endpoint}/test', [EndpointController::class, 'test'])->name('endpoints.test');
+    Route::post('/endpoints/{endpoint}/test', [EndpointController::class, 'test'])
+        ->middleware('throttle:webhook-trigger')
+        ->name('endpoints.test');
     Route::post('/endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret'])->name('endpoints.regenerate-secret');
     Route::get('/events', [DashboardController::class, 'events'])->name('events');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
