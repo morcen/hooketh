@@ -23,7 +23,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => ['nullable', 'array', new ValidEventSchema],
+            'schema' => ['nullable', 'array', new ValidEventSchema()],
         ]);
 
         $request->user()->events()->create($validated);
@@ -43,7 +43,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => ['nullable', 'array', new ValidEventSchema],
+            'schema' => ['nullable', 'array', new ValidEventSchema()],
         ]);
 
         $event->update($validated);
@@ -83,7 +83,7 @@ class EventController extends Controller
         abort_if($event->user_id !== $request->user()->id, 403);
 
         $validated = $request->validate([
-            'payload' => ['required', 'array', new WebhookPayloadSize],
+            'payload' => ['required', 'array', new WebhookPayloadSize()],
         ]);
 
         $payload = $validated['payload'];
