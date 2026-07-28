@@ -290,6 +290,11 @@ WEBHOOK_RATE_LIMIT=60                          # Max trigger requests per minute
 APP_FORCE_HTTPS=true
 SESSION_SECURE_COOKIE=true
 
+# Trusted proxies (required behind any reverse proxy/load balancer, e.g. the
+# Nginx SSL config below, so Request::ip() resolves to the real client IP
+# instead of the proxy's — see Security Considerations)
+TRUSTED_PROXIES=127.0.0.1
+
 # Logging
 LOG_CHANNEL=stack
 LOG_LEVEL=info
