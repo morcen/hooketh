@@ -80,6 +80,7 @@ class SendWebhook implements ShouldQueue
         $urlParts = parse_url($endpoint->url);
         $host = trim($urlParts['host'] ?? '', '[]');
         $port = $urlParts['port'] ?? (strtolower($urlParts['scheme'] ?? '') === 'https' ? 443 : 80);
+        $maxResponseBytes = (int) config('webhooks.response_body_max_size', 65536);
 
         try {
             $start = microtime(true);
@@ -88,6 +89,11 @@ class SendWebhook implements ShouldQueue
                     'allow_redirects' => false,
                     'curl' => [
                         CURLOPT_RESOLVE => ["{$host}:{$port}:{$safeIp}"],
+                        // Abort the transfer early if the endpoint tries to stream
+                        // back more than the configured cap, rather than buffering
+                        // an arbitrarily large body in memory.
+                        CURLOPT_NOPROGRESS => false,
+                        CURLOPT_PROGRESSFUNCTION => fn ($resource, $downloadSize, $downloaded) => $downloaded > $maxResponseBytes ? 1 : 0,
                     ],
                 ])
                 ->withHeaders([
@@ -98,11 +104,12 @@ class SendWebhook implements ShouldQueue
                 ])
                 ->post($endpoint->url, $payload);
             $durationMs = (int) round((microtime(true) - $start) * 1000);
+            $responseBody = $this->truncateResponseBody($response->body(), $maxResponseBytes);
 
             $this->delivery->update([
                 'status' => $response->successful() ? 'success' : 'failed',
                 'response_code' => $response->status(),
-                'response_body' => $response->body(),
+                'response_body' => $responseBody,
                 'duration_ms' => $durationMs,
                 'delivered_at' => $response->successful() ? now() : null,
                 'next_retry_at' => null,
@@ -119,7 +126,7 @@ class SendWebhook implements ShouldQueue
                     'delivery_id' => $this->delivery->id,
                     'endpoint_url' => $endpoint->url,
                     'response_code' => $response->status(),
-                    'response_body' => $response->body(),
+                    'response_body' => $responseBody,
                 ]);
 
                 $this->handleFailedDelivery();
@@ -165,6 +172,15 @@ class SendWebhook implements ShouldQueue
     public function backoff(): array
     {
         return config('webhooks.backoff_delays', [60, 300, 900, 1800, 3600]);
+    }
+
+    private function truncateResponseBody(string $body, int $maxBytes): string
+    {
+        if (strlen($body) <= $maxBytes) {
+            return $body;
+        }
+
+        return substr($body, 0, $maxBytes)."\n...[truncated, response body exceeded {$maxBytes} bytes]";
     }
 
     private function handleFailedDelivery(): void
