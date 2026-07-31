@@ -30,6 +30,7 @@ Route::prefix('v1')
     ->group(function () {
         Route::apiResource('endpoints', EndpointController::class);
         Route::post('endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret'])
+            ->middleware('throttle:secret-rotation')
             ->name('endpoints.regenerate-secret');
 
         Route::apiResource('events', EventController::class);
@@ -56,7 +57,8 @@ Route::middleware('auth:sanctum')->group(function () {
         'update' => 'api.endpoints.update',
         'destroy' => 'api.endpoints.destroy',
     ]);
-    Route::post('endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret']);
+    Route::post('endpoints/{endpoint}/regenerate-secret', [EndpointController::class, 'regenerateSecret'])
+        ->middleware('throttle:secret-rotation');
 
     Route::apiResource('events', EventController::class)->names([
         'index' => 'api.events.index',

@@ -26,5 +26,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(config('webhooks.rate_limit', 60))
                 ->by($request->user()?->id ?: $request->ip());
         });
+
+        RateLimiter::for('secret-rotation', function (Request $request) {
+            return Limit::perMinute(config('webhooks.secret_rotation_rate_limit', 5))
+                ->by($request->user()?->id ?: $request->ip());
+        });
     }
 }

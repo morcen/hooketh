@@ -32,6 +32,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Secret Rotation Rate Limit
+    |--------------------------------------------------------------------------
+    | Max endpoint secret-regeneration requests per minute per authenticated
+    | user. Kept low since every rotation invalidates the previous HMAC
+    | signing secret, breaking signature verification for the receiver.
+    */
+    'secret_rotation_rate_limit' => (int) env('WEBHOOK_SECRET_ROTATION_RATE_LIMIT', 5),
+
+    /*
+    |--------------------------------------------------------------------------
     | Webhook Payload Max Size
     |--------------------------------------------------------------------------
     | Maximum size, in bytes, of a trigger request's JSON-encoded payload.
