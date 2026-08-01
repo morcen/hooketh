@@ -43,6 +43,7 @@ Route::prefix('v1')
             ->middleware('throttle:webhook-trigger')
             ->name('webhooks.trigger');
         Route::post('deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])
+            ->middleware('throttle:webhook-trigger')
             ->name('deliveries.retry');
     });
 
@@ -72,7 +73,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('deliveries/stats', [DeliveryController::class, 'stats']);
     Route::get('deliveries/{delivery}', [DeliveryController::class, 'show']);
 
-    Route::post('deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery']);
+    Route::post('deliveries/{delivery}/retry', [WebhookController::class, 'retryDelivery'])
+        ->middleware('throttle:webhook-trigger');
 
     Route::post('webhooks/trigger/{eventName}', [WebhookController::class, 'trigger'])
         ->middleware('throttle:webhook-trigger');
