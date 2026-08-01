@@ -50,4 +50,15 @@ return [
     */
     'payload_max_size' => (int) env('WEBHOOK_PAYLOAD_MAX_SIZE', 102400),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook Response Body Max Size
+    |--------------------------------------------------------------------------
+    | Maximum size, in bytes, of a delivery response body that will be
+    | downloaded and stored. Prevents a malicious or misbehaving endpoint
+    | from exhausting queue worker memory or unboundedly growing the
+    | deliveries table by returning an arbitrarily large response.
+    */
+    'response_body_max_size' => (int) env('WEBHOOK_RESPONSE_BODY_MAX_SIZE', 65536),
+
 ];

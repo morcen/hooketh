@@ -98,4 +98,5 @@ WEBHOOK_BACKOFF_DELAYS=60,300,900,1800,3600   # seconds per attempt
 WEBHOOK_RATE_LIMIT=60                          # trigger requests per minute per user
 WEBHOOK_SECRET_ROTATION_RATE_LIMIT=5           # endpoint secret-regeneration requests per minute per user
 WEBHOOK_PAYLOAD_MAX_SIZE=102400                # max JSON-encoded trigger payload size, in bytes
+WEBHOOK_RESPONSE_BODY_MAX_SIZE=65536           # max delivery response body downloaded/stored, in bytes
 ```
