@@ -95,7 +95,9 @@ Route::middleware([
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     Route::post('/events/{event}/endpoints', [EventController::class, 'syncEndpoints'])->name('events.endpoints');
-    Route::post('/events/{event}/trigger', [EventController::class, 'trigger'])->name('events.trigger');
+    Route::post('/events/{event}/trigger', [EventController::class, 'trigger'])
+        ->middleware('throttle:webhook-trigger')
+        ->name('events.trigger');
     Route::get('/events/{event}/edit', [DashboardController::class, 'editEvent'])->name('events.edit');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::get('/deliveries', [DashboardController::class, 'deliveries'])->name('deliveries');
