@@ -14,9 +14,11 @@ class DeliveryRetryRateLimitTest extends TestCase
 {
     use RefreshDatabase;
 
+    private static int $eventCounter = 0;
+
     private function createFailedDelivery(User $user): Delivery
     {
-        $event = Event::factory()->for($user)->create();
+        $event = Event::factory()->for($user)->create(['name' => 'delivery.retry.test.'.self::$eventCounter++]);
         $endpoint = Endpoint::factory()->for($user)->create(['is_active' => true]);
 
         return Delivery::factory()->failed()->create([
