@@ -191,8 +191,11 @@ class SendWebhook implements ShouldQueue
                 'next_retry_at' => now()->addSeconds($delay),
             ]);
 
-            // Retry the job
-            $this->release($delay);
+            // Retries are re-dispatched exclusively by the webhooks:process-retries
+            // scheduled command (driven by next_retry_at). Also releasing this job
+            // instance back onto the queue here would cause the same delivery to be
+            // sent twice: once when this job's release() delay elapses, and again
+            // when the cron tick finds the same row via Delivery::readyForRetry().
         }
     }
 }
