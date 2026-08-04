@@ -96,7 +96,7 @@ class WebhookController extends Controller
     {
         // Ensure the delivery belongs to the authenticated user
         if ($delivery->event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         if (! $delivery->isFailed()) {
