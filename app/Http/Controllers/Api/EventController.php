@@ -68,7 +68,7 @@ class EventController extends Controller
     public function show(Request $request, Event $event): JsonResponse
     {
         if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         return response()->json($event->load([
@@ -85,7 +85,7 @@ class EventController extends Controller
     public function update(Request $request, Event $event): JsonResponse
     {
         if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -126,7 +126,7 @@ class EventController extends Controller
     public function destroy(Request $request, Event $event): JsonResponse
     {
         if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         $event->delete();

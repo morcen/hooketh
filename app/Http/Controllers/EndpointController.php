@@ -32,7 +32,7 @@ class EndpointController extends Controller
 
     public function update(Request $request, Endpoint $endpoint): RedirectResponse
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 403);
+        abort_if($endpoint->user_id !== $request->user()->id, 404);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
@@ -48,7 +48,7 @@ class EndpointController extends Controller
 
     public function destroy(Request $request, Endpoint $endpoint): RedirectResponse
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 403);
+        abort_if($endpoint->user_id !== $request->user()->id, 404);
 
         $endpoint->delete();
 
@@ -57,7 +57,7 @@ class EndpointController extends Controller
 
     public function test(Request $request, Endpoint $endpoint)
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 403);
+        abort_if($endpoint->user_id !== $request->user()->id, 404);
 
         $safeIp = SafeWebhookUrl::resolveSafeIp($endpoint->url);
 
@@ -109,7 +109,7 @@ class EndpointController extends Controller
 
     public function regenerateSecret(Request $request, Endpoint $endpoint): JsonResponse
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 403);
+        abort_if($endpoint->user_id !== $request->user()->id, 404);
 
         $newSecret = Str::random(32);
         $endpoint->update(['secret_key' => $newSecret]);

@@ -33,7 +33,7 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 403);
+        abort_if($event->user_id !== $request->user()->id, 404);
 
         $validated = $request->validate([
             'name' => [
@@ -53,7 +53,7 @@ class EventController extends Controller
 
     public function destroy(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 403);
+        abort_if($event->user_id !== $request->user()->id, 404);
 
         $event->delete();
 
@@ -62,7 +62,7 @@ class EventController extends Controller
 
     public function syncEndpoints(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 403);
+        abort_if($event->user_id !== $request->user()->id, 404);
 
         $validated = $request->validate([
             'endpoint_ids' => 'array',
@@ -80,7 +80,7 @@ class EventController extends Controller
 
     public function trigger(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 403);
+        abort_if($event->user_id !== $request->user()->id, 404);
 
         $validated = $request->validate([
             'payload' => ['required', 'array', new WebhookPayloadSize()],

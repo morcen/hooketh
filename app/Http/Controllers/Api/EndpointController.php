@@ -59,7 +59,7 @@ class EndpointController extends Controller
     public function show(Request $request, Endpoint $endpoint): JsonResponse
     {
         if ($endpoint->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         return response()->json($endpoint->load(['events', 'deliveries' => function ($query) {
@@ -73,7 +73,7 @@ class EndpointController extends Controller
     public function update(Request $request, Endpoint $endpoint): JsonResponse
     {
         if ($endpoint->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -101,7 +101,7 @@ class EndpointController extends Controller
     public function regenerateSecret(Request $request, Endpoint $endpoint): JsonResponse
     {
         if ($endpoint->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         $newSecret = Str::random(32);
@@ -118,7 +118,7 @@ class EndpointController extends Controller
     public function destroy(Request $request, Endpoint $endpoint): JsonResponse
     {
         if ($endpoint->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json(['message' => 'Not Found'], 404);
         }
 
         $endpoint->delete();
