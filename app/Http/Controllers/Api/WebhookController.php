@@ -19,7 +19,7 @@ class WebhookController extends Controller
     public function trigger(Request $request, string $eventName): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'payload' => ['required', 'array', new WebhookPayloadSize()],
+            'payload' => ['required', 'array', new WebhookPayloadSize],
         ]);
 
         if ($validator->fails()) {
@@ -52,8 +52,18 @@ class WebhookController extends Controller
         $payload = $request->input('payload');
 
         if ($event->schema) {
-            $schemaValidator = Validator::make($payload, $event->schema);
-            if ($schemaValidator->fails()) {
+            try {
+                $schemaValidator = Validator::make($payload, $event->schema);
+                $schemaFails = $schemaValidator->fails();
+            } catch (\Throwable $e) {
+                report($e);
+
+                return response()->json([
+                    'message' => 'This event has an invalid schema configuration and cannot currently accept triggers.',
+                ], 500);
+            }
+
+            if ($schemaFails) {
                 return response()->json([
                     'message' => 'Payload does not match event schema',
                     'errors' => $schemaValidator->errors(),

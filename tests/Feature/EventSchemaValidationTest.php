@@ -63,4 +63,31 @@ class EventSchemaValidationTest extends TestCase
         $response->assertSessionHasErrors('schema');
         $this->assertDatabaseCount('events', 0);
     }
+
+    public function test_api_rejects_schema_with_unresolvable_rule_name(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $response = $this->actingAs($user)->postJson('/api/v1/events', [
+            'name' => 'order.created',
+            'schema' => ['field' => 'required|thisruledoesnotexist'],
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors('schema');
+        $this->assertDatabaseCount('events', 0);
+    }
+
+    public function test_dashboard_rejects_schema_with_unresolvable_rule_name(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $response = $this->actingAs($user)->post(route('events.store'), [
+            'name' => 'order.created',
+            'schema' => ['field' => 'required|thisruledoesnotexist'],
+        ]);
+
+        $response->assertSessionHasErrors('schema');
+        $this->assertDatabaseCount('events', 0);
+    }
 }

@@ -10,7 +10,7 @@ class ValidEventSchemaTest extends TestCase
     private function fails(mixed $schema): bool
     {
         $failed = false;
-        (new ValidEventSchema())->validate('schema', $schema, function () use (&$failed) {
+        (new ValidEventSchema)->validate('schema', $schema, function () use (&$failed) {
             $failed = true;
         });
 
@@ -43,5 +43,15 @@ class ValidEventSchemaTest extends TestCase
     public function test_non_array_schema_passes(): void
     {
         $this->assertFalse($this->fails(null));
+    }
+
+    public function test_schema_with_unresolvable_rule_name_fails(): void
+    {
+        $this->assertTrue($this->fails(['field' => 'required|thisruledoesnotexist']));
+    }
+
+    public function test_schema_with_unresolvable_rule_in_array_form_fails(): void
+    {
+        $this->assertTrue($this->fails(['field' => ['required', 'anotherbogusrule']]));
     }
 }
