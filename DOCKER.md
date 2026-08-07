@@ -238,7 +238,7 @@ All services communicate through the `webhook-network` bridge network:
 ### Environment Variables
 - The main `.env` file is never baked into the image; `docker-compose.yml` injects it into each container at start time via `env_file`, so secrets aren't persisted in any built image layer
 - Secrets should be managed through the `.env` file
-- Database and Redis passwords should be changed in production
+- Database and Redis passwords should be changed in production by setting `DB_PASSWORD`/`REDIS_PASSWORD` in `.env`; `docker-compose.yml` reads those same values to configure the `db`/`redis` containers themselves, so the app and its data stores always stay in sync
 - SSL certificates should be mounted for HTTPS
 - APP_KEY is required and must be generated before starting containers
 
