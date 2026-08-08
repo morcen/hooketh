@@ -19,7 +19,7 @@ class WebhookController extends Controller
     public function trigger(Request $request, string $eventName): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'payload' => ['required', 'array', new WebhookPayloadSize],
+            'payload' => ['required', 'array', new WebhookPayloadSize()],
         ]);
 
         if ($validator->fails()) {

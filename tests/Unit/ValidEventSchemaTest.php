@@ -10,7 +10,7 @@ class ValidEventSchemaTest extends TestCase
     private function fails(mixed $schema): bool
     {
         $failed = false;
-        (new ValidEventSchema)->validate('schema', $schema, function () use (&$failed) {
+        (new ValidEventSchema())->validate('schema', $schema, function () use (&$failed) {
             $failed = true;
         });
 
