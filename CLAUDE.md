@@ -66,7 +66,7 @@ The scheduler (`routes/console.php`) runs `webhooks:process-retries` every minut
 
 ### Health check
 
-`GET /health` returns JSON with `database`, `redis`, and `queue_worker` status. `queue_worker` is `stale` (503) when the Redis key `queue:heartbeat` is older than 2 minutes. The `QueueHeartbeat` artisan command writes this key every minute via the scheduler.
+`GET /health` is unauthenticated (for load balancer/orchestrator probes) and returns only `{"status", "timestamp"}` with a 200/503 code — no service breakdown, to avoid disclosing internal infrastructure details to anonymous callers. `GET /health/detailed` requires `auth:sanctum` and returns the full breakdown: `database`, `redis`, and `queue_worker` status, plus loaded PHP extensions. `queue_worker` is `stale` (503) when the Redis key `queue:heartbeat` is older than 2 minutes. The `QueueHeartbeat` artisan command writes this key every minute via the scheduler.
 
 ### Key models
 
