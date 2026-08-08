@@ -10,6 +10,8 @@ use App\Rules\WebhookPayloadSize;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class EventController extends Controller
 {
@@ -89,7 +91,16 @@ class EventController extends Controller
         $payload = $validated['payload'];
 
         if ($event->schema) {
-            $request->validate($event->schema);
+            try {
+                $request->validate($event->schema);
+            } catch (ValidationException $e) {
+                throw $e;
+            } catch (Throwable $e) {
+                report($e);
+
+                return redirect()->route('events')
+                    ->with('error', 'This event has an invalid schema configuration and cannot currently accept triggers.');
+            }
         }
 
         foreach ($event->activeEndpoints()->get() as $endpoint) {

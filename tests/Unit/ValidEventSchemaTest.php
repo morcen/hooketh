@@ -44,4 +44,14 @@ class ValidEventSchemaTest extends TestCase
     {
         $this->assertFalse($this->fails(null));
     }
+
+    public function test_schema_with_unresolvable_rule_name_fails(): void
+    {
+        $this->assertTrue($this->fails(['field' => 'required|thisruledoesnotexist']));
+    }
+
+    public function test_schema_with_unresolvable_rule_in_array_form_fails(): void
+    {
+        $this->assertTrue($this->fails(['field' => ['required', 'anotherbogusrule']]));
+    }
 }
