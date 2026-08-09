@@ -11,8 +11,10 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-// Health check endpoint for deployment monitoring
-Route::get('/health', function () {
+// Computes the full internal health snapshot shared by the public and
+// authenticated /health routes below, so both stay in sync with the
+// same checks.
+$computeHealth = function () {
     $health = [
         'status' => 'ok',
         'timestamp' => now()->toISOString(),
@@ -70,6 +72,29 @@ Route::get('/health', function () {
         $health['status'] = 'error';
     }
 
+    return $health;
+};
+
+// Public health check for load balancers/orchestrators. Deliberately
+// unauthenticated (deployment probes rarely carry credentials), so it
+// only reports the overall status/HTTP code and never the underlying
+// service breakdown, loaded extensions, or queue heartbeat staleness —
+// those details are internal infrastructure information and are only
+// available via the authenticated /health/detailed route below.
+Route::get('/health', function () use ($computeHealth) {
+    $health = $computeHealth();
+    $status = $health['status'] === 'ok' ? 200 : 503;
+
+    return response()->json([
+        'status' => $health['status'],
+        'timestamp' => $health['timestamp'],
+    ], $status);
+});
+
+// Authenticated health check with the full per-service breakdown, for
+// ops/monitoring tooling that holds a valid Sanctum token.
+Route::middleware('auth:sanctum')->get('/health/detailed', function () use ($computeHealth) {
+    $health = $computeHealth();
     $status = $health['status'] === 'ok' ? 200 : 503;
 
     return response()->json($health, $status);

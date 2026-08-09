@@ -339,10 +339,30 @@ server {
 
 ### Health Check Endpoint
 
-The `/health` endpoint is already implemented at `routes/web.php`. It checks database, Redis, and the queue worker scheduler heartbeat:
+The `/health` endpoint is already implemented at `routes/web.php`. It checks database, Redis, and the queue worker scheduler heartbeat, but — since it's unauthenticated for use by load balancers/orchestrators — only reports the overall status, not which service is degraded:
 
 ```
 GET /health
+
+# Healthy response (HTTP 200):
+{
+  "status": "ok",
+  "timestamp": "..."
+}
+
+# Degraded response (HTTP 503) if any service is down or
+# if the scheduler hasn't written a heartbeat in >2 minutes:
+{
+  "status": "error",
+  "timestamp": "..."
+}
+```
+
+For the full per-service breakdown (database/Redis connectivity, loaded PHP extensions, queue heartbeat staleness), authenticate with a Sanctum token and call `GET /health/detailed`:
+
+```
+GET /health/detailed
+Authorization: Bearer <sanctum-token>
 
 # Healthy response (HTTP 200):
 {
@@ -352,6 +372,11 @@ GET /health
     "database": "connected",
     "redis": "connected",
     "queue_worker": "ok"
+  },
+  "extensions": {
+    "pgsql": true,
+    "pdo_pgsql": true,
+    "redis": true
   }
 }
 
