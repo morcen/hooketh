@@ -143,6 +143,7 @@ class SendWebhook implements ShouldQueue
                 'response_code' => null,
                 'response_body' => $e->getMessage(),
                 'delivered_at' => null,
+                'next_retry_at' => null,
             ]);
 
             $this->handleFailedDelivery();
