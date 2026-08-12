@@ -61,4 +61,15 @@ return [
     */
     'response_body_max_size' => (int) env('WEBHOOK_RESPONSE_BODY_MAX_SIZE', 65536),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Stuck "Retrying" Delivery Threshold
+    |--------------------------------------------------------------------------
+    | Minutes a Delivery may remain in the `retrying` status before it's
+    | considered abandoned (e.g. the queue worker crashed or was restarted
+    | mid-attempt) and swept back into the normal retry flow by
+    | webhooks:process-retries.
+    */
+    'stuck_retrying_minutes' => (int) env('WEBHOOK_STUCK_RETRYING_MINUTES', 10),
+
 ];
