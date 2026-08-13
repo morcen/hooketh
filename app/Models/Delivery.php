@@ -60,6 +60,21 @@ class Delivery extends Model
             ->where('next_retry_at', '<=', now());
     }
 
+    /**
+     * Deliveries left in `retrying` status past the configured threshold,
+     * indicating the job that set that status never reached a terminal
+     * success/failed update (e.g. the queue worker crashed or was restarted
+     * mid-attempt). Invisible to every other status-based scope, so these
+     * must be swept back into the normal retry flow explicitly.
+     */
+    public function scopeStuckRetrying($query, ?int $minutes = null)
+    {
+        $minutes ??= config('webhooks.stuck_retrying_minutes', 10);
+
+        return $query->where('status', 'retrying')
+            ->where('updated_at', '<=', now()->subMinutes($minutes));
+    }
+
     public function isSuccessful(): bool
     {
         return $this->status === 'success';
