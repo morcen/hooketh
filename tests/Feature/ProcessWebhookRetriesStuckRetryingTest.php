@@ -47,8 +47,8 @@ class ProcessWebhookRetriesStuckRetryingTest extends TestCase
     {
         Queue::fake();
 
-        $maxRetries = config('webhooks.max_retries', 5);
-        $delivery = $this->makeStuckRetryingDelivery(attemptCount: $maxRetries - 1, minutesStuck: 15);
+        $maxAttempts = SendWebhook::maxAttempts();
+        $delivery = $this->makeStuckRetryingDelivery(attemptCount: $maxAttempts - 1, minutesStuck: 15);
 
         $this->artisan('webhooks:process-retries')->assertSuccessful();
 
@@ -63,8 +63,8 @@ class ProcessWebhookRetriesStuckRetryingTest extends TestCase
     {
         Queue::fake();
 
-        $maxRetries = config('webhooks.max_retries', 5);
-        $delivery = $this->makeStuckRetryingDelivery(attemptCount: $maxRetries, minutesStuck: 15);
+        $maxAttempts = SendWebhook::maxAttempts();
+        $delivery = $this->makeStuckRetryingDelivery(attemptCount: $maxAttempts, minutesStuck: 15);
 
         $this->artisan('webhooks:process-retries')->assertSuccessful();
 

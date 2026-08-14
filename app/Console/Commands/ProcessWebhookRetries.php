@@ -74,10 +74,10 @@ class ProcessWebhookRetries extends Command
             return;
         }
 
-        $maxRetries = config('webhooks.max_retries', 5);
+        $maxAttempts = SendWebhook::maxAttempts();
 
         foreach ($stuck as $delivery) {
-            if ($delivery->attempt_count >= $maxRetries) {
+            if ($delivery->attempt_count >= $maxAttempts) {
                 $delivery->update([
                     'status' => 'failed',
                     'response_body' => 'Delivery abandoned mid-attempt (queue worker crash or restart) after exhausting all retry attempts.',

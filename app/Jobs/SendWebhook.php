@@ -22,7 +22,24 @@ class SendWebhook implements ShouldQueue
 
     public function tries(): int
     {
-        return config('webhooks.max_retries', 5);
+        // config('webhooks.max_retries') is the number of *retries*, not the
+        // total attempt count — the initial attempt is on top of that. Adding
+        // 1 here (rather than treating max_retries as the total attempt
+        // ceiling) is what lets handleFailedDelivery() actually reach and use
+        // the last configured backoff delay instead of stopping one attempt
+        // short of it.
+        return self::maxAttempts();
+    }
+
+    /**
+     * Total attempts allowed for a delivery: the initial attempt plus every
+     * configured retry. Shared by handleFailedDelivery() (the normal retry
+     * path) and ProcessWebhookRetries::recoverStuckRetries() (the crashed
+     * worker recovery path) so both agree on when a delivery is exhausted.
+     */
+    public static function maxAttempts(): int
+    {
+        return config('webhooks.max_retries', 5) + 1;
     }
 
     /**
