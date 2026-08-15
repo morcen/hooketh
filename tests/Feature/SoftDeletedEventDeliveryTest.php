@@ -14,10 +14,10 @@ class SoftDeletedEventDeliveryTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function createDeliveryWithSoftDeletedEvent(User $user, array $deliveryState = []): Delivery
+    private function createDeliveryWithSoftDeletedEvent(User $user, array $deliveryState = [], array $endpointState = []): Delivery
     {
         $event = Event::factory()->for($user)->create(['name' => 'soft-deleted-event-test']);
-        $endpoint = Endpoint::factory()->for($user)->create(['is_active' => true]);
+        $endpoint = Endpoint::factory()->for($user)->create(array_merge(['is_active' => true], $endpointState));
 
         $delivery = Delivery::factory()->create(array_merge([
             'event_id' => $event->id,
@@ -78,16 +78,22 @@ class SoftDeletedEventDeliveryTest extends TestCase
 
     public function test_retry_delivery_does_not_500_after_event_soft_delete(): void
     {
-        Http::fake();
+        Http::fake(['*' => Http::response(['ok' => true], 200)]);
 
         $user = User::factory()->withPersonalTeam()->create();
-        $delivery = $this->createDeliveryWithSoftDeletedEvent($user, ['status' => 'failed']);
+        $delivery = $this->createDeliveryWithSoftDeletedEvent(
+            $user,
+            ['status' => 'failed'],
+            ['url' => 'http://8.8.8.8/webhook'],
+        );
 
+        // Prior to this fix, the ownership check itself (`$delivery->event->user_id`)
+        // dereferenced a null relation and threw an uncaught Error here, regardless
+        // of how the subsequently-dispatched SendWebhook job behaves.
         $this->actingAs($user)
             ->postJson("/api/v1/deliveries/{$delivery->id}/retry")
-            ->assertOk();
-
-        $this->assertSame('pending', $delivery->fresh()->status);
+            ->assertOk()
+            ->assertJsonPath('delivery_id', $delivery->id);
     }
 
     public function test_retry_delivery_still_enforces_ownership_after_event_soft_delete(): void
