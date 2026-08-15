@@ -76,13 +76,13 @@ class SendWebhookRetryDispatchTest extends TestCase
             throw new ConnectionException('Could not connect to host.');
         });
 
-        $maxRetries = config('webhooks.max_retries', 5);
+        $maxAttempts = SendWebhook::maxAttempts();
 
         $delivery = $this->makeDelivery(User::factory()->withPersonalTeam()->create());
         $delivery->update([
             'status' => 'failed',
             // Simulate the delivery already being on its last allowed attempt.
-            'attempt_count' => $maxRetries - 1,
+            'attempt_count' => $maxAttempts - 1,
             'next_retry_at' => now()->subMinute(),
         ]);
 
@@ -91,7 +91,7 @@ class SendWebhookRetryDispatchTest extends TestCase
 
         $delivery->refresh();
         $this->assertSame('failed', $delivery->status);
-        $this->assertSame($maxRetries, $delivery->attempt_count);
+        $this->assertSame($maxAttempts, $delivery->attempt_count);
 
         // Once retries are exhausted, next_retry_at must be cleared so the
         // exception path can't leave a stale, already-past timestamp behind
@@ -99,5 +99,51 @@ class SendWebhookRetryDispatchTest extends TestCase
         // WEBHOOK_MAX_RETRIES.
         $this->assertNull($delivery->next_retry_at);
         $this->assertSame(0, Delivery::readyForRetry()->whereKey($delivery->id)->count());
+    }
+
+    public function test_every_configured_backoff_delay_is_exercised_across_a_full_retry_cycle(): void
+    {
+        Http::fake([
+            '*' => Http::response('error', 500),
+        ]);
+
+        $backoffDelays = config('webhooks.backoff_delays', [60, 300, 900, 1800, 3600]);
+        $maxAttempts = SendWebhook::maxAttempts();
+
+        // maxAttempts is the initial attempt plus one retry per configured
+        // backoff delay, so there should be exactly one delay per retry.
+        $this->assertSame(count($backoffDelays), $maxAttempts - 1);
+
+        $delivery = $this->makeDelivery(User::factory()->withPersonalTeam()->create());
+
+        foreach ($backoffDelays as $index => $expectedDelay) {
+            $before = now();
+            $job = (new SendWebhook($delivery))->withFakeQueueInteractions();
+            $job->handle();
+
+            $delivery->refresh();
+            $this->assertSame('failed', $delivery->status);
+            $this->assertSame($index + 1, $delivery->attempt_count);
+            $this->assertNotNull(
+                $delivery->next_retry_at,
+                "Retry {$index} should have been scheduled using backoff delay {$expectedDelay}s, but next_retry_at was cleared."
+            );
+            $this->assertEqualsWithDelta(
+                $before->addSeconds($expectedDelay)->timestamp,
+                $delivery->next_retry_at->timestamp,
+                2
+            );
+
+            $delivery->update(['next_retry_at' => null]);
+        }
+
+        // One more failed attempt beyond the last configured delay exhausts
+        // the delivery permanently.
+        $job = (new SendWebhook($delivery))->withFakeQueueInteractions();
+        $job->handle();
+
+        $delivery->refresh();
+        $this->assertSame($maxAttempts, $delivery->attempt_count);
+        $this->assertNull($delivery->next_retry_at);
     }
 }
