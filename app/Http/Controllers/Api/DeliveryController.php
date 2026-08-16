@@ -15,9 +15,9 @@ class DeliveryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Delivery::query()
-            ->with(['event', 'endpoint'])
+            ->with(['event' => fn ($q) => $q->withTrashed(), 'endpoint'])
             ->whereHas('event', function ($q) use ($request) {
-                $q->where('user_id', $request->user()->id);
+                $q->withTrashed()->where('user_id', $request->user()->id);
             });
 
         // Filter by status
@@ -55,12 +55,17 @@ class DeliveryController extends Controller
      */
     public function show(Request $request, Delivery $delivery): JsonResponse
     {
+        // Load the event with trashed included: a soft-deleted parent event
+        // must not make an existing delivery's ownership check (or its
+        // history) silently disappear.
+        $event = $delivery->event()->withTrashed()->first();
+
         // Ensure the delivery belongs to the authenticated user
-        if ($delivery->event->user_id !== $request->user()->id) {
+        if (! $event || $event->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
 
-        return response()->json($delivery->load(['event', 'endpoint']));
+        return response()->json($delivery->load(['event' => fn ($q) => $q->withTrashed(), 'endpoint']));
     }
 
     /**
@@ -70,7 +75,7 @@ class DeliveryController extends Controller
     {
         $baseQuery = Delivery::query()
             ->whereHas('event', function ($q) use ($request) {
-                $q->where('user_id', $request->user()->id);
+                $q->withTrashed()->where('user_id', $request->user()->id);
             });
 
         $stats = [

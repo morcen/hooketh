@@ -104,8 +104,12 @@ class WebhookController extends Controller
      */
     public function retryDelivery(Request $request, Delivery $delivery): JsonResponse
     {
+        // Load the event with trashed included: a soft-deleted parent event
+        // must not turn this ownership check into a crash on a null relation.
+        $event = $delivery->event()->withTrashed()->first();
+
         // Ensure the delivery belongs to the authenticated user
-        if ($delivery->event->user_id !== $request->user()->id) {
+        if (! $event || $event->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
 
