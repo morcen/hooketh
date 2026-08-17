@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\SendWebhook;
 use App\Models\Delivery;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class ProcessWebhookRetries extends Command
 {
@@ -31,25 +32,36 @@ class ProcessWebhookRetries extends Command
 
         $this->info('Processing webhook delivery retries...');
 
-        $retriesQuery = Delivery::readyForRetry();
-        $retriesCount = $retriesQuery->count();
+        // Claiming (select + status flip) happens inside a single transaction
+        // with row-level locking so that even a manual duplicate invocation
+        // of this command can't pick up the same Delivery row twice. This is
+        // the atomic-claim half of the fix; withoutOverlapping() on the
+        // scheduled command (routes/console.php) is the other half, stopping
+        // a second scheduler tick from starting at all while a prior run is
+        // still processing a backlog.
+        $retries = DB::transaction(function () {
+            $claimed = Delivery::readyForRetry()->lockForUpdate()->get();
 
-        if ($retriesCount === 0) {
+            foreach ($claimed as $delivery) {
+                $delivery->update([
+                    'status' => 'pending',
+                    'next_retry_at' => null,
+                ]);
+            }
+
+            return $claimed;
+        });
+
+        if ($retries->isEmpty()) {
             $this->info('No deliveries ready for retry.');
 
             return Command::SUCCESS;
         }
 
+        $retriesCount = $retries->count();
         $this->info("Found {$retriesCount} deliveries ready for retry.");
 
-        $retries = $retriesQuery->get();
-
         foreach ($retries as $delivery) {
-            $delivery->update([
-                'status' => 'pending',
-                'next_retry_at' => null,
-            ]);
-
             SendWebhook::dispatch($delivery);
 
             $this->line("Queued retry for delivery {$delivery->id}");
