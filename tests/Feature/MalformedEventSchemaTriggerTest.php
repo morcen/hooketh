@@ -54,13 +54,8 @@ class MalformedEventSchemaTriggerTest extends TestCase
         $endpoint = Endpoint::factory()->for($user)->create(['is_active' => true]);
         $event->endpoints()->attach($endpoint);
 
-        // The dashboard's trigger action validates the schema against the
-        // raw request data rather than the payload sub-array (a separate,
-        // already-tracked bug), so "field" needs to be present at the top
-        // level here for the bogus rule to actually be resolved/invoked.
         $response = $this->actingAs($user)->post(route('events.trigger', $event), [
             'payload' => ['field' => 'value'],
-            'field' => 'value',
         ]);
 
         $response->assertRedirect(route('events'));
