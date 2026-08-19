@@ -4,13 +4,13 @@ namespace App\Jobs;
 
 use App\Models\Delivery;
 use App\Rules\SafeWebhookUrl;
-use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SendWebhook implements ShouldQueue
 {
@@ -148,7 +148,7 @@ class SendWebhook implements ShouldQueue
 
                 $this->handleFailedDelivery();
             }
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             Log::error('Webhook delivery exception', [
                 'delivery_id' => $this->delivery->id,
                 'endpoint_url' => $endpoint->url,
@@ -170,7 +170,7 @@ class SendWebhook implements ShouldQueue
     /**
      * Handle a job failure.
      */
-    public function failed(Exception $exception): void
+    public function failed(Throwable $exception): void
     {
         $this->delivery->update([
             'status' => 'failed',
