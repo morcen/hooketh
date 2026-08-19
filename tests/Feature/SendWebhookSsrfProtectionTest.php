@@ -26,6 +26,7 @@ class SendWebhookSsrfProtectionTest extends TestCase
         // where the endpoint URL resolved safely at creation time but not now.
         $endpoint = Endpoint::factory()->for($user)->create([
             'url' => 'http://169.254.169.254/latest/meta-data/',
+            'is_active' => true,
         ]);
 
         $delivery = Delivery::factory()->create([
@@ -52,7 +53,7 @@ class SendWebhookSsrfProtectionTest extends TestCase
 
         $user = User::factory()->withPersonalTeam()->create();
         $event = Event::factory()->for($user)->create();
-        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook']);
+        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook', 'is_active' => true]);
 
         $delivery = Delivery::factory()->create([
             'event_id' => $event->id,
@@ -81,6 +82,7 @@ class SendWebhookSsrfProtectionTest extends TestCase
         // to simulate a URL that resolves into the RFC 6598 CGNAT range.
         $endpoint = Endpoint::factory()->for($user)->create([
             'url' => 'http://100.64.0.1/webhook',
+            'is_active' => true,
         ]);
 
         $delivery = Delivery::factory()->create([

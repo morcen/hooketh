@@ -25,7 +25,7 @@ class SendWebhookResponseBodySizeLimitTest extends TestCase
 
         $user = User::factory()->withPersonalTeam()->create();
         $event = Event::factory()->for($user)->create();
-        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook']);
+        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook', 'is_active' => true]);
 
         $delivery = Delivery::factory()->create([
             'event_id' => $event->id,
@@ -54,7 +54,7 @@ class SendWebhookResponseBodySizeLimitTest extends TestCase
 
         $user = User::factory()->withPersonalTeam()->create();
         $event = Event::factory()->for($user)->create();
-        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook']);
+        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook', 'is_active' => true]);
 
         $delivery = Delivery::factory()->create([
             'event_id' => $event->id,
