@@ -19,7 +19,7 @@ class SendWebhookThrowableHandlingTest extends TestCase
     private function makeDelivery(User $user): Delivery
     {
         $event = Event::factory()->for($user)->create();
-        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook']);
+        $endpoint = Endpoint::factory()->for($user)->create(['url' => 'http://8.8.8.8/webhook', 'is_active' => true]);
 
         return Delivery::factory()->create([
             'event_id' => $event->id,

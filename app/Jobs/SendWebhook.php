@@ -67,6 +67,20 @@ class SendWebhook implements ShouldQueue
             return;
         }
 
+        if (! $endpoint->is_active) {
+            // Deactivating an endpoint is a deliberate stop signal, so this
+            // failure is permanent rather than retried: next_retry_at must be
+            // cleared, or scopeReadyForRetry() would keep matching this row
+            // forever and ProcessWebhookRetries would re-queue it every cycle.
+            $this->delivery->update([
+                'status' => 'failed',
+                'response_body' => 'Endpoint is inactive.',
+                'next_retry_at' => null,
+            ]);
+
+            return;
+        }
+
         $safeIp = SafeWebhookUrl::resolveSafeIp($endpoint->url);
 
         if ($safeIp === null) {
