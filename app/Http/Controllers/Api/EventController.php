@@ -8,6 +8,7 @@ use App\Rules\ValidEventSchema;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class EventController extends Controller
 {
@@ -31,9 +32,12 @@ class EventController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:events,name',
+            'name' => [
+                'required', 'string', 'max:255',
+                Rule::unique('events', 'name')->where('user_id', $request->user()->id),
+            ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -89,9 +93,12 @@ class EventController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'string|max:255|unique:events,name,'.$event->id,
+            'name' => [
+                'string', 'max:255',
+                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id),
+            ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
