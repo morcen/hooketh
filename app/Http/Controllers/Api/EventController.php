@@ -37,7 +37,7 @@ class EventController extends Controller
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id),
             ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema],
+            'schema' => ['nullable', 'array', new ValidEventSchema()],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -98,7 +98,7 @@ class EventController extends Controller
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id),
             ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema],
+            'schema' => ['nullable', 'array', new ValidEventSchema()],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
