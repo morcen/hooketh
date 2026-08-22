@@ -81,6 +81,24 @@ class SendWebhook implements ShouldQueue
             return;
         }
 
+        $event = $this->delivery->event;
+
+        if (! $event || $event->trashed()) {
+            // Event also uses SoftDeletes, and Delivery::event() is a plain
+            // belongsTo with no withTrashed(), so once the parent Event is
+            // soft-deleted this relation resolves to null. Fail cleanly here
+            // (mirroring the Endpoint guard above) instead of letting a null
+            // Event reach the X-Webhook-Event header below, which would burn
+            // through retry attempts on a delivery that can never succeed.
+            $this->delivery->update([
+                'status' => 'failed',
+                'response_body' => 'Event was deleted.',
+                'next_retry_at' => null,
+            ]);
+
+            return;
+        }
+
         $safeIp = SafeWebhookUrl::resolveSafeIp($endpoint->url);
 
         if ($safeIp === null) {
@@ -130,7 +148,7 @@ class SendWebhook implements ShouldQueue
                 ->withHeaders([
                     'Content-Type' => 'application/json',
                     'X-Webhook-Secret' => hash_hmac('sha256', json_encode($payload), $endpoint->secret_key),
-                    'X-Webhook-Event' => $this->delivery->event->name,
+                    'X-Webhook-Event' => $event->name,
                     'User-Agent' => 'Webhook-Management-Platform/1.0',
                 ])
                 ->post($endpoint->url, $payload);
