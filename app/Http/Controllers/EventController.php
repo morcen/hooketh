@@ -25,7 +25,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
         ]);
 
         $request->user()->events()->create($validated);
@@ -45,7 +45,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
         ]);
 
         $event->update($validated);
@@ -85,7 +85,7 @@ class EventController extends Controller
         abort_if($event->user_id !== $request->user()->id, 404);
 
         $validated = $request->validate([
-            'payload' => ['required', 'array', new WebhookPayloadSize()],
+            'payload' => ['required', 'array', new WebhookPayloadSize],
         ]);
 
         $payload = $validated['payload'];
@@ -114,9 +114,34 @@ class EventController extends Controller
                 'status' => 'pending',
             ]);
 
-            SendWebhook::dispatch($delivery);
+            $this->dispatchDelivery($delivery);
         }
 
         return redirect()->route('events')->with('success', 'Event triggered.');
+    }
+
+    /**
+     * Dispatch the delivery job, guarding against a failure at dispatch time
+     * (e.g. the "webhooks" queue connection being briefly unreachable).
+     * Without this, an exception here would propagate out of trigger() as an
+     * uncaught 500 mid-loop — aborting delivery creation for any endpoints
+     * later in the loop — and leave this Delivery stuck in "pending"
+     * forever, since scopeReadyForRetry() only matches "failed" rows.
+     * Marking it failed with next_retry_at set instead lets the normal
+     * webhooks:process-retries cron pick it back up.
+     */
+    private function dispatchDelivery(Delivery $delivery): void
+    {
+        try {
+            SendWebhook::dispatch($delivery);
+        } catch (Throwable $e) {
+            report($e);
+
+            $delivery->update([
+                'status' => 'failed',
+                'response_body' => 'Failed to queue delivery for dispatch: '.$e->getMessage(),
+                'next_retry_at' => now(),
+            ]);
+        }
     }
 }
