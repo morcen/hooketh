@@ -10,6 +10,9 @@ return new class () extends Migration {
      */
     public function up(): void
     {
+        // The preceding migration now adds `event_type` as nullable directly,
+        // so this is a redundant no-op on fresh installs. Kept in place so
+        // databases that already ran it retain a consistent migration history.
         Schema::table('events', function (Blueprint $table) {
             $table->string('event_type')->nullable()->change();
         });
