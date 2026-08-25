@@ -41,7 +41,9 @@ class WebDeliveryRetryTest extends TestCase
             ->post(route('deliveries.retry', $delivery))
             ->assertRedirect();
 
-        $this->assertSame('pending', $delivery->fresh()->status);
+        // QUEUE_CONNECTION=sync in tests, so the dispatched SendWebhook job
+        // has already run inline by the time the response comes back.
+        $this->assertSame('success', $delivery->fresh()->status);
     }
 
     public function test_retry_enforces_ownership(): void
@@ -88,8 +90,10 @@ class WebDeliveryRetryTest extends TestCase
             ->post(route('deliveries.retry-failed'))
             ->assertRedirect();
 
-        $this->assertSame('pending', $failedA->fresh()->status);
-        $this->assertSame('pending', $failedB->fresh()->status);
+        // QUEUE_CONNECTION=sync in tests, so each dispatched SendWebhook job
+        // has already run inline by the time the response comes back.
+        $this->assertSame('success', $failedA->fresh()->status);
+        $this->assertSame('success', $failedB->fresh()->status);
         $this->assertSame('success', $successful->fresh()->status);
         $this->assertSame('failed', $othersFailed->fresh()->status);
     }
