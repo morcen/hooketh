@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\EndpointController;
 use App\Http\Controllers\EventController;
 use Illuminate\Support\Facades\DB;
@@ -126,4 +127,10 @@ Route::middleware([
     Route::get('/events/{event}/edit', [DashboardController::class, 'editEvent'])->name('events.edit');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::get('/deliveries', [DashboardController::class, 'deliveries'])->name('deliveries');
+    Route::post('/deliveries/retry-failed', [DeliveryController::class, 'retryFailed'])
+        ->middleware('throttle:webhook-trigger')
+        ->name('deliveries.retry-failed');
+    Route::post('/deliveries/{delivery}/retry', [DeliveryController::class, 'retry'])
+        ->middleware('throttle:webhook-trigger')
+        ->name('deliveries.retry');
 });
