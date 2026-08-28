@@ -61,6 +61,43 @@ class HealthCheckTest extends TestCase
             ->assertJson(['status' => 'error']);
     }
 
+    public function test_public_health_endpoint_returns_503_when_redis_is_completely_down(): void
+    {
+        // Simulates a full Redis outage: both Redis::ping() and the later
+        // Redis::get('queue:heartbeat') call throw, since a real
+        // connection failure isn't limited to the first call that touches
+        // the connection. Regression test for #76, where the second,
+        // unguarded call bubbled up as an uncaught exception (raw 500)
+        // instead of the intended structured 503.
+        Redis::shouldReceive('ping')->andThrow(new \Exception('connection refused'));
+        Redis::shouldReceive('get')->with('queue:heartbeat')->andThrow(new \Exception('connection refused'));
+
+        $response = $this->getJson('/health');
+
+        $response->assertStatus(503)
+            ->assertExactJsonStructure(['status', 'timestamp'])
+            ->assertJson(['status' => 'error']);
+    }
+
+    public function test_detailed_health_endpoint_returns_503_when_redis_is_completely_down(): void
+    {
+        $user = User::factory()->withPersonalTeam()->create();
+        Redis::shouldReceive('ping')->andThrow(new \Exception('connection refused'));
+        Redis::shouldReceive('get')->with('queue:heartbeat')->andThrow(new \Exception('connection refused'));
+
+        $response = $this->actingAs($user)->getJson('/health/detailed');
+
+        $response->assertStatus(503)
+            ->assertJson([
+                'status' => 'error',
+                'services' => [
+                    'database' => 'connected',
+                    'redis' => 'disconnected',
+                    'queue_worker' => 'unknown',
+                ],
+            ]);
+    }
+
     public function test_detailed_health_endpoint_rejects_unauthenticated_requests(): void
     {
         $response = $this->getJson('/health/detailed');
