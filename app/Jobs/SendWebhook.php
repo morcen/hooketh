@@ -178,7 +178,20 @@ class SendWebhook implements ShouldQueue
                     'response_body' => $responseBody,
                 ]);
 
-                $this->handleFailedDelivery();
+                if ($this->isPermanentFailure($response->status())) {
+                    // A 4xx (other than 408/429) means the receiving endpoint is
+                    // rejecting this payload outright — retrying it on the usual
+                    // backoff schedule would never succeed, so skip
+                    // handleFailedDelivery() and leave next_retry_at cleared
+                    // (already set above) rather than burning a full retry cycle.
+                    Log::info('Webhook delivery permanently failed: non-retryable client error', [
+                        'delivery_id' => $this->delivery->id,
+                        'endpoint_url' => $endpoint->url,
+                        'response_code' => $response->status(),
+                    ]);
+                } else {
+                    $this->handleFailedDelivery();
+                }
             }
         } catch (Throwable $e) {
             Log::error('Webhook delivery exception', [
@@ -222,6 +235,20 @@ class SendWebhook implements ShouldQueue
     public function backoff(): array
     {
         return config('webhooks.backoff_delays', [60, 300, 900, 1800, 3600]);
+    }
+
+    /**
+     * A 4xx response (other than 408 Request Timeout and 429 Too Many
+     * Requests, which are legitimately transient) means the endpoint is
+     * permanently rejecting this payload — no amount of retrying will
+     * change that, so it should fail immediately instead of consuming the
+     * normal backoff/retry schedule.
+     */
+    private function isPermanentFailure(int $statusCode): bool
+    {
+        return $statusCode >= 400
+            && $statusCode < 500
+            && ! in_array($statusCode, [408, 429], true);
     }
 
     private function truncateResponseBody(string $body, int $maxBytes): string
