@@ -32,10 +32,12 @@ $computeHealth = function () {
     }
 
     // Check Redis connection
+    $redisAvailable = true;
     try {
         Redis::ping();
         $health['services']['redis'] = 'connected';
     } catch (Exception $e) {
+        $redisAvailable = false;
         $health['status'] = 'error';
         $health['services']['redis'] = 'disconnected';
     }
@@ -61,13 +63,26 @@ $computeHealth = function () {
         'redis' => extension_loaded('redis'),
     ];
 
-    // Check queue worker via scheduler heartbeat
-    $heartbeat = Redis::get('queue:heartbeat');
-    $queueStatus = match (true) {
-        $heartbeat === null => 'unknown',
-        (now()->timestamp - (int) $heartbeat) <= 120 => 'ok',
-        default => 'stale',
-    };
+    // Check queue worker via scheduler heartbeat. Skip this entirely once
+    // Redis is already known to be unreachable — attempting another Redis
+    // call here would just throw again (uncaught, since this closure has
+    // no surrounding try/catch), turning the intended graceful 503 into a
+    // raw 500 during exactly the outage this endpoint exists to report.
+    if ($redisAvailable) {
+        try {
+            $heartbeat = Redis::get('queue:heartbeat');
+            $queueStatus = match (true) {
+                $heartbeat === null => 'unknown',
+                (now()->timestamp - (int) $heartbeat) <= 120 => 'ok',
+                default => 'stale',
+            };
+        } catch (Exception $e) {
+            $queueStatus = 'unknown';
+        }
+    } else {
+        $queueStatus = 'unknown';
+    }
+
     $health['services']['queue_worker'] = $queueStatus;
     if ($queueStatus === 'stale') {
         $health['status'] = 'error';
