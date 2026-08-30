@@ -101,8 +101,8 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                                     <tr v-for="delivery in recentDeliveries" :key="delivery.id" class="hover:bg-slate-50 dark:hover:bg-slate-900/70">
-                                        <td class="py-4 pr-4 text-sm font-semibold text-slate-900 dark:text-white">{{ delivery.event.name }}</td>
-                                        <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">{{ delivery.endpoint.name }}</td>
+                                        <td class="py-4 pr-4 text-sm font-semibold text-slate-900 dark:text-white">{{ delivery.event?.name || 'Unknown Event' }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-600 dark:text-slate-300">{{ delivery.endpoint?.name || 'Unknown Endpoint' }}</td>
                                         <td class="px-4 py-4">
                                             <span :class="getStatusClass(delivery.status)" class="app-status">
                                                 {{ delivery.status }}
