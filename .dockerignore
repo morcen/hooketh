@@ -57,7 +57,6 @@ phpunit.xml
 webpack.config.js
 webpack.mix.js
 mix-manifest.json
-vite.config.js
 
 # Logs
 *.log
