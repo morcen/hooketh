@@ -117,8 +117,66 @@ class HealthCheckTest extends TestCase
                 'status',
                 'timestamp',
                 'services' => ['database', 'redis', 'queue_worker'],
-                'extensions' => ['pgsql', 'pdo_pgsql', 'redis'],
+                'extensions',
             ]);
+    }
+
+    public function test_detailed_health_endpoint_only_requires_extensions_for_the_configured_drivers(): void
+    {
+        // Regression test for #170: the extension check used to be a fixed
+        // ['pgsql', 'pdo_pgsql', 'redis'] list regardless of the actually
+        // configured DB_CONNECTION/REDIS_CLIENT, so a SQLite deployment
+        // (this app's own documented default, and what the test suite
+        // itself runs on) was checked against Postgres extensions it has
+        // no use for. It should only report/require extensions relevant
+        // to the configured drivers.
+        config(['database.default' => 'sqlite', 'database.redis.client' => 'phpredis']);
+        $this->fakeHealthyRedis();
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $response = $this->actingAs($user)->getJson('/health/detailed');
+
+        $response->assertOk()
+            ->assertJsonPath('extensions.pdo_sqlite', true)
+            ->assertJsonMissingPath('extensions.pgsql')
+            ->assertJsonMissingPath('extensions.pdo_pgsql');
+    }
+
+    public function test_detailed_health_endpoint_does_not_require_the_redis_extension_for_a_predis_client(): void
+    {
+        // A `predis` client is a pure-PHP Redis library with no dependency
+        // on the `redis` PHP extension, so it shouldn't be required (or
+        // even reported) when that's the configured client.
+        config(['database.redis.client' => 'predis']);
+        $this->fakeHealthyRedis();
+        $user = User::factory()->withPersonalTeam()->create();
+
+        $response = $this->actingAs($user)->getJson('/health/detailed');
+
+        $response->assertOk()->assertJsonMissingPath('extensions.redis');
+    }
+
+    public function test_detailed_health_endpoint_requires_postgres_extensions_when_configured_for_pgsql(): void
+    {
+        // Create the user and fake Redis under the real (sqlite) test
+        // connection first, then only flip config('database.default') to
+        // 'pgsql' around the request itself and restore it immediately
+        // after. Leaving it changed would make RefreshDatabase's
+        // end-of-test rollback resolve the wrong ("pgsql") connection
+        // instead of the sqlite one its transaction actually began on,
+        // leaking a stuck transaction into every later test.
+        $this->fakeHealthyRedis();
+        $user = User::factory()->withPersonalTeam()->create();
+
+        config(['database.default' => 'pgsql']);
+        try {
+            $response = $this->actingAs($user)->getJson('/health/detailed');
+        } finally {
+            config(['database.default' => 'sqlite']);
+        }
+
+        $response->assertJsonPath('extensions.pgsql', true)
+            ->assertJsonPath('extensions.pdo_pgsql', true);
     }
 
     public function test_detailed_health_endpoint_reports_stale_queue_worker(): void

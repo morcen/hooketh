@@ -42,8 +42,23 @@ $computeHealth = function () {
         $health['services']['redis'] = 'disconnected';
     }
 
-    // Check PHP extensions
-    $requiredExtensions = ['pgsql', 'pdo_pgsql', 'redis'];
+    // Check PHP extensions required by the actually configured database
+    // and Redis drivers, rather than a fixed Postgres/phpredis list — the
+    // project's own documented default (SQLite for tests/local dev, or a
+    // predis-based Redis client) needs neither the pgsql/pdo_pgsql nor the
+    // redis extension, so requiring them unconditionally made this health
+    // check report "error" forever under that default config regardless
+    // of whether the app was actually functioning (see #170).
+    $requiredExtensions = array_values(array_filter([
+        config('database.default') === 'pgsql' ? 'pgsql' : null,
+        match (config('database.default')) {
+            'pgsql' => 'pdo_pgsql',
+            'mysql' => 'pdo_mysql',
+            'sqlite' => 'pdo_sqlite',
+            default => null,
+        },
+        config('database.redis.client') === 'phpredis' ? 'redis' : null,
+    ]));
     $missingExtensions = [];
 
     foreach ($requiredExtensions as $extension) {
@@ -57,11 +72,9 @@ $computeHealth = function () {
         $health['missing_extensions'] = $missingExtensions;
     }
 
-    $health['extensions'] = [
-        'pgsql' => extension_loaded('pgsql'),
-        'pdo_pgsql' => extension_loaded('pdo_pgsql'),
-        'redis' => extension_loaded('redis'),
-    ];
+    $health['extensions'] = collect($requiredExtensions)
+        ->mapWithKeys(fn (string $extension) => [$extension => extension_loaded($extension)])
+        ->all();
 
     // Check queue worker via scheduler heartbeat. Skip this entirely once
     // Redis is already known to be unreachable — attempting another Redis
