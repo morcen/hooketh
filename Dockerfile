@@ -52,6 +52,21 @@ COPY . .
 # Install PHP dependencies (after PHP extensions are installed)
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# Node build stage - compiles the Vite/Vue frontend assets referenced by
+# resources/views/app.blade.php's @vite() directive. resources/js/app.js
+# imports vendor/tightenco/ziggy directly, so this stage needs the vendor/
+# directory Composer just installed in php-base above.
+FROM node:22-alpine AS node-build
+
+WORKDIR /app
+
+# Copy only what npm install / vite build actually need
+COPY package.json vite.config.js tailwind.config.js postcss.config.js ./
+COPY resources ./resources
+COPY --from=php-base /var/www/html/vendor/tightenco/ziggy ./vendor/tightenco/ziggy
+
+RUN npm install && npm run build
+
 # Development stage
 FROM php-base AS development
 
@@ -66,6 +81,10 @@ RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 FROM php-base AS production
 
 # Application code already copied in base stage
+
+# Copy the frontend assets built in the node-build stage (public/build is
+# git/dockerignored, so it only exists via this multi-stage copy)
+COPY --from=node-build /app/public/build ./public/build
 
 # Remove development files
 RUN rm -rf \
