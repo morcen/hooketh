@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class DeliveryController extends Controller
 {
@@ -14,6 +16,19 @@ class DeliveryController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $validator = Validator::make($request->all(), [
+            'status' => ['nullable', 'string', Rule::in(['pending', 'retrying', 'success', 'failed'])],
+            'from_date' => ['nullable', 'date'],
+            'to_date' => ['nullable', 'date'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         $query = Delivery::query()
             ->with(['event' => fn ($q) => $q->withTrashed(), 'endpoint'])
             ->whereHas('event', function ($q) use ($request) {
