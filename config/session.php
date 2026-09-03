@@ -167,9 +167,16 @@ return [
     | to the server if the browser has a HTTPS connection. This will keep
     | the cookie from being sent to you when it can't be done securely.
     |
+    | Defaults to whether APP_URL is served over https:// rather than to
+    | APP_ENV, since APP_ENV=production says nothing about whether a TLS
+    | terminator actually sits in front of this app. Keying off APP_ENV
+    | alone previously caused Secure-flagged cookies to be issued for
+    | plain-HTTP production deployments (e.g. the shipped docker-compose.yml
+    | stack), which browsers silently discard, making login appear broken.
+    |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV', 'production') === 'production'),
+    'secure' => env('SESSION_SECURE_COOKIE', str_starts_with(env('APP_URL', 'http://localhost'), 'https://')),
 
     /*
     |--------------------------------------------------------------------------
