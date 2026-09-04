@@ -34,6 +34,14 @@ docker run -d \
   webhook-platform:latest
 ```
 
+> **Note:** Session cookies get the `Secure` flag automatically whenever
+> `APP_URL` starts with `https://` (not merely because `APP_ENV=production`).
+> If this container sits behind a TLS-terminating reverse proxy/load
+> balancer, set `APP_URL=https://your-domain.com` so the cookie flag matches
+> reality. Leave `APP_URL` on `http://` (the default) only if you're
+> genuinely serving plain HTTP — otherwise browsers will silently drop the
+> session cookie and login will appear to do nothing.
+
 ## ☁️ Cloud Provider Specific Deployments
 
 ### 1. **DigitalOcean App Platform**
