@@ -20,7 +20,7 @@ class EventController extends Controller
         $validated = $request->validate([
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('events', 'name')->where('user_id', $request->user()->id),
+                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->withoutTrashed(),
             ],
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
@@ -40,7 +40,7 @@ class EventController extends Controller
         $validated = $request->validate([
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id),
+                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id)->withoutTrashed(),
             ],
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
