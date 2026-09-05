@@ -34,7 +34,7 @@ class EventController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required', 'string', 'max:255',
-                Rule::unique('events', 'name')->where('user_id', $request->user()->id),
+                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->withoutTrashed(),
             ],
             'description' => 'nullable|string|max:1000',
             'schema' => ['nullable', 'array', new ValidEventSchema()],
@@ -95,7 +95,7 @@ class EventController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => [
                 'string', 'max:255',
-                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id),
+                Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id)->withoutTrashed(),
             ],
             'description' => 'nullable|string|max:1000',
             'schema' => ['nullable', 'array', new ValidEventSchema()],
