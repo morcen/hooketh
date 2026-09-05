@@ -80,6 +80,16 @@
                     </div>
                 </div>
 
+                <!-- Active event filter -->
+                <div v-if="filteredEvent" class="mb-6">
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
+                        Filtered by event: {{ filteredEvent.name }}
+                        <button type="button" @click="clearEventFilter" class="hover:text-indigo-600 dark:hover:text-indigo-100">
+                            &times;
+                        </button>
+                    </span>
+                </div>
+
                 <!-- Filters -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg mb-6">
                     <div class="p-6">
@@ -377,6 +387,7 @@ const props = defineProps({
     deliveries: Object,
     endpoints: Array,
     filters: Object,
+    filteredEvent: Object,
 })
 
 // State
@@ -386,6 +397,7 @@ const retryProcessing = ref(false)
 const filters = ref({
     status: props.filters?.status || '',
     endpoint_id: props.filters?.endpoint_id || '',
+    event_id: props.filters?.event_id || '',
     event_name: props.filters?.event_name || '',
     from_date: props.filters?.from_date || '',
     to_date: props.filters?.to_date || '',
@@ -405,8 +417,8 @@ const pendingCount = computed(() => {
 })
 
 const hasFilters = computed(() => {
-    return filters.value.status || filters.value.endpoint_id || filters.value.event_name
-        || filters.value.from_date || filters.value.to_date
+    return filters.value.status || filters.value.endpoint_id || filters.value.event_id
+        || filters.value.event_name || filters.value.from_date || filters.value.to_date
 })
 
 // Methods
@@ -478,10 +490,16 @@ function clearFilters() {
     filters.value = {
         status: '',
         endpoint_id: '',
+        event_id: '',
         event_name: '',
         from_date: '',
         to_date: '',
     }
+    applyFilters()
+}
+
+function clearEventFilter() {
+    filters.value.event_id = ''
     applyFilters()
 }
 </script>
