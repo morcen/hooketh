@@ -94,6 +94,18 @@ class DashboardController extends Controller
                 ->find($request->event_id, ['id', 'name']);
         }
 
+        if ($request->has('event_name') && $request->event_name) {
+            $query->whereHas('event', fn ($q) => $q->where('name', 'like', '%'.$request->event_name.'%'));
+        }
+
+        if ($request->has('from_date') && $request->from_date) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->has('to_date') && $request->to_date) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
         $deliveries = $query->latest()->paginate(20);
 
         // Get filter options
@@ -102,7 +114,7 @@ class DashboardController extends Controller
         return Inertia::render('Deliveries/Index', [
             'deliveries' => $deliveries,
             'endpoints' => $endpoints,
-            'filters' => $request->only(['status', 'endpoint_id', 'event_id']),
+            'filters' => $request->only(['status', 'endpoint_id', 'event_id', 'event_name', 'from_date', 'to_date']),
             'filteredEvent' => $filteredEvent,
         ]);
     }
