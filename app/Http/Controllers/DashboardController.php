@@ -85,6 +85,15 @@ class DashboardController extends Controller
             $query->where('endpoint_id', $request->endpoint_id);
         }
 
+        $filteredEvent = null;
+
+        if ($request->has('event_id') && $request->event_id) {
+            $query->where('event_id', $request->event_id);
+
+            $filteredEvent = $request->user()->events()
+                ->find($request->event_id, ['id', 'name']);
+        }
+
         $deliveries = $query->latest()->paginate(20);
 
         // Get filter options
@@ -93,7 +102,8 @@ class DashboardController extends Controller
         return Inertia::render('Deliveries/Index', [
             'deliveries' => $deliveries,
             'endpoints' => $endpoints,
-            'filters' => $request->only(['status', 'endpoint_id']),
+            'filters' => $request->only(['status', 'endpoint_id', 'event_id']),
+            'filteredEvent' => $filteredEvent,
         ]);
     }
 }
