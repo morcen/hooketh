@@ -16,6 +16,8 @@ class DeliveryController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         $validator = Validator::make($request->all(), [
             'status' => ['nullable', 'string', Rule::in(['pending', 'retrying', 'success', 'failed'])],
             'from_date' => ['nullable', 'date'],
@@ -70,6 +72,8 @@ class DeliveryController extends Controller
      */
     public function show(Request $request, Delivery $delivery): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         // Load the event with trashed included: a soft-deleted parent event
         // must not make an existing delivery's ownership check (or its
         // history) silently disappear.
@@ -88,6 +92,8 @@ class DeliveryController extends Controller
      */
     public function stats(Request $request): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         $baseQuery = Delivery::query()
             ->whereHas('event', function ($q) use ($request) {
                 $q->withTrashed()->where('user_id', $request->user()->id);

@@ -17,6 +17,8 @@ class EventController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         $events = $request->user()->events()
             ->with(['endpoints', 'deliveries' => function ($query) {
                 $query->latest()->limit(5);
@@ -31,13 +33,15 @@ class EventController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorizeAbility($request, 'create');
+
         $validator = Validator::make($request->all(), [
             'name' => [
                 'required', 'string', 'max:255',
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id)->withoutTrashed(),
             ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -71,6 +75,8 @@ class EventController extends Controller
      */
     public function show(Request $request, Event $event): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         if ($event->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
@@ -88,6 +94,8 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event): JsonResponse
     {
+        $this->authorizeAbility($request, 'update');
+
         if ($event->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
@@ -98,7 +106,7 @@ class EventController extends Controller
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id)->withoutTrashed(),
             ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -132,6 +140,8 @@ class EventController extends Controller
      */
     public function destroy(Request $request, Event $event): JsonResponse
     {
+        $this->authorizeAbility($request, 'delete');
+
         if ($event->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }

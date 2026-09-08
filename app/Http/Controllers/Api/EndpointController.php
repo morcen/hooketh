@@ -17,6 +17,8 @@ class EndpointController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         $endpoints = $request->user()->endpoints()
             ->with('events')
             ->paginate(15);
@@ -29,9 +31,11 @@ class EndpointController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $this->authorizeAbility($request, 'create');
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl()],
+            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -58,6 +62,8 @@ class EndpointController extends Controller
      */
     public function show(Request $request, Endpoint $endpoint): JsonResponse
     {
+        $this->authorizeAbility($request, 'read');
+
         if ($endpoint->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
@@ -72,13 +78,15 @@ class EndpointController extends Controller
      */
     public function update(Request $request, Endpoint $endpoint): JsonResponse
     {
+        $this->authorizeAbility($request, 'update');
+
         if ($endpoint->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'string|max:255',
-            'url' => ['url', 'max:2048', new SafeWebhookUrl()],
+            'url' => ['url', 'max:2048', new SafeWebhookUrl],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -100,6 +108,8 @@ class EndpointController extends Controller
      */
     public function regenerateSecret(Request $request, Endpoint $endpoint): JsonResponse
     {
+        $this->authorizeAbility($request, 'update');
+
         if ($endpoint->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }
@@ -117,6 +127,8 @@ class EndpointController extends Controller
      */
     public function destroy(Request $request, Endpoint $endpoint): JsonResponse
     {
+        $this->authorizeAbility($request, 'delete');
+
         if ($endpoint->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Not Found'], 404);
         }

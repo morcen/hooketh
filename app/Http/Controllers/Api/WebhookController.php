@@ -18,8 +18,10 @@ class WebhookController extends Controller
      */
     public function trigger(Request $request, string $eventName): JsonResponse
     {
+        $this->authorizeAbility($request, 'create');
+
         $validator = Validator::make($request->all(), [
-            'payload' => ['required', 'array', new WebhookPayloadSize()],
+            'payload' => ['required', 'array', new WebhookPayloadSize],
         ]);
 
         if ($validator->fails()) {
@@ -128,6 +130,8 @@ class WebhookController extends Controller
      */
     public function retryDelivery(Request $request, Delivery $delivery): JsonResponse
     {
+        $this->authorizeAbility($request, 'update');
+
         // Load the event with trashed included: a soft-deleted parent event
         // must not turn this ownership check into a crash on a null relation.
         $event = $delivery->event()->withTrashed()->first();

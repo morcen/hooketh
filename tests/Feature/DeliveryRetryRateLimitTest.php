@@ -8,6 +8,7 @@ use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class DeliveryRetryRateLimitTest extends TestCase
@@ -33,19 +34,18 @@ class DeliveryRetryRateLimitTest extends TestCase
         config(['webhooks.rate_limit' => 2]);
 
         $user = User::factory()->withPersonalTeam()->create();
+        Sanctum::actingAs($user, ['*']);
 
         for ($i = 0; $i < 2; $i++) {
             $delivery = $this->createFailedDelivery($user);
 
-            $this->actingAs($user)
-                ->postJson("/api/v1/deliveries/{$delivery->id}/retry")
+            $this->postJson("/api/v1/deliveries/{$delivery->id}/retry")
                 ->assertOk();
         }
 
         $delivery = $this->createFailedDelivery($user);
 
-        $this->actingAs($user)
-            ->postJson("/api/v1/deliveries/{$delivery->id}/retry")
+        $this->postJson("/api/v1/deliveries/{$delivery->id}/retry")
             ->assertStatus(429);
     }
 
@@ -55,19 +55,18 @@ class DeliveryRetryRateLimitTest extends TestCase
         config(['webhooks.rate_limit' => 2]);
 
         $user = User::factory()->withPersonalTeam()->create();
+        Sanctum::actingAs($user, ['*']);
 
         for ($i = 0; $i < 2; $i++) {
             $delivery = $this->createFailedDelivery($user);
 
-            $this->actingAs($user)
-                ->postJson("/api/deliveries/{$delivery->id}/retry")
+            $this->postJson("/api/deliveries/{$delivery->id}/retry")
                 ->assertOk();
         }
 
         $delivery = $this->createFailedDelivery($user);
 
-        $this->actingAs($user)
-            ->postJson("/api/deliveries/{$delivery->id}/retry")
+        $this->postJson("/api/deliveries/{$delivery->id}/retry")
             ->assertStatus(429);
     }
 
@@ -83,16 +82,16 @@ class DeliveryRetryRateLimitTest extends TestCase
         $deliveryA2 = $this->createFailedDelivery($userA);
         $deliveryB = $this->createFailedDelivery($userB);
 
-        $this->actingAs($userA)
-            ->postJson("/api/v1/deliveries/{$deliveryA1->id}/retry")
+        Sanctum::actingAs($userA, ['*']);
+        $this->postJson("/api/v1/deliveries/{$deliveryA1->id}/retry")
             ->assertOk();
 
-        $this->actingAs($userA)
-            ->postJson("/api/v1/deliveries/{$deliveryA2->id}/retry")
+        Sanctum::actingAs($userA, ['*']);
+        $this->postJson("/api/v1/deliveries/{$deliveryA2->id}/retry")
             ->assertStatus(429);
 
-        $this->actingAs($userB)
-            ->postJson("/api/v1/deliveries/{$deliveryB->id}/retry")
+        Sanctum::actingAs($userB, ['*']);
+        $this->postJson("/api/v1/deliveries/{$deliveryB->id}/retry")
             ->assertOk();
     }
 }
