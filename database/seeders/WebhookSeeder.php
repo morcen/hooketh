@@ -7,6 +7,7 @@ use App\Models\Endpoint;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class WebhookSeeder extends Seeder
 {
@@ -98,7 +99,7 @@ class WebhookSeeder extends Seeder
                 $event = Event::factory()
                     ->for($user)
                     ->create([
-                        'name' => $eventType.'_'.time().'_'.rand(1000, 9999),
+                        'name' => $eventType.'_'.Str::ulid(),
                         'event_type' => $eventType,
                         'description' => 'Triggered when '.str_replace('.', ' ', $eventType).' occurs',
                     ]);
@@ -141,7 +142,7 @@ class WebhookSeeder extends Seeder
             $event = Event::factory()
                 ->for($user)
                 ->create([
-                    'name' => $eventType.'_recent_'.time().'_'.rand(1000, 9999),
+                    'name' => $eventType.'_recent_'.Str::ulid(),
                     'event_type' => $eventType,
                     'description' => 'Recent '.str_replace('.', ' ', $eventType).' event',
                     'created_at' => $createdAt,
