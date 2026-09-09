@@ -21,7 +21,7 @@ class WebhookController extends Controller
         $this->authorizeAbility($request, 'create');
 
         $validator = Validator::make($request->all(), [
-            'payload' => ['required', 'array', new WebhookPayloadSize],
+            'payload' => ['required', 'array', new WebhookPayloadSize()],
         ]);
 
         if ($validator->fails()) {
