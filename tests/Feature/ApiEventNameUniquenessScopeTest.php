@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Event;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ApiEventNameUniquenessScopeTest extends TestCase
@@ -16,12 +17,12 @@ class ApiEventNameUniquenessScopeTest extends TestCase
         $userA = User::factory()->withPersonalTeam()->create();
         $userB = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($userA)
-            ->postJson('/api/v1/events', ['name' => 'order.created'])
+        Sanctum::actingAs($userA, ['*']);
+        $this->postJson('/api/v1/events', ['name' => 'order.created'])
             ->assertStatus(201);
 
-        $this->actingAs($userB)
-            ->postJson('/api/v1/events', ['name' => 'order.created'])
+        Sanctum::actingAs($userB, ['*']);
+        $this->postJson('/api/v1/events', ['name' => 'order.created'])
             ->assertStatus(201);
 
         $this->assertDatabaseHas('events', ['user_id' => $userA->id, 'name' => 'order.created']);
@@ -32,12 +33,12 @@ class ApiEventNameUniquenessScopeTest extends TestCase
     {
         $user = User::factory()->withPersonalTeam()->create();
 
-        $this->actingAs($user)
-            ->postJson('/api/v1/events', ['name' => 'order.created'])
+        Sanctum::actingAs($user, ['*']);
+        $this->postJson('/api/v1/events', ['name' => 'order.created'])
             ->assertStatus(201);
 
-        $this->actingAs($user)
-            ->postJson('/api/v1/events', ['name' => 'order.created'])
+        Sanctum::actingAs($user, ['*']);
+        $this->postJson('/api/v1/events', ['name' => 'order.created'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('name');
 
@@ -52,8 +53,8 @@ class ApiEventNameUniquenessScopeTest extends TestCase
         Event::factory()->for($userA)->create(['name' => 'order.created']);
         $eventB = Event::factory()->for($userB)->create(['name' => 'order.updated']);
 
-        $this->actingAs($userB)
-            ->putJson("/api/v1/events/{$eventB->id}", ['name' => 'order.created'])
+        Sanctum::actingAs($userB, ['*']);
+        $this->putJson("/api/v1/events/{$eventB->id}", ['name' => 'order.created'])
             ->assertStatus(200);
 
         $this->assertDatabaseHas('events', ['id' => $eventB->id, 'name' => 'order.created']);
@@ -66,8 +67,8 @@ class ApiEventNameUniquenessScopeTest extends TestCase
         Event::factory()->for($user)->create(['name' => 'order.created']);
         $second = Event::factory()->for($user)->create(['name' => 'order.updated']);
 
-        $this->actingAs($user)
-            ->putJson("/api/v1/events/{$second->id}", ['name' => 'order.created'])
+        Sanctum::actingAs($user, ['*']);
+        $this->putJson("/api/v1/events/{$second->id}", ['name' => 'order.created'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('name');
     }
