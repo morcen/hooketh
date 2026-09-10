@@ -179,6 +179,19 @@ class HealthCheckTest extends TestCase
             ->assertJsonPath('extensions.pdo_pgsql', true);
     }
 
+    public function test_built_in_up_health_route_is_not_registered(): void
+    {
+        // Regression test for #158: Laravel's default `health: '/up'` route
+        // used to coexist with this app's own /health endpoint. Unlike
+        // /health, /up never checked the database, Redis, or the queue
+        // heartbeat — it always returned 200. Wiring an orchestrator's
+        // health probe to /up by convention would mask a real outage that
+        // /health is specifically built to catch, so /up must not exist.
+        $response = $this->getJson('/up');
+
+        $response->assertStatus(404);
+    }
+
     public function test_detailed_health_endpoint_reports_stale_queue_worker(): void
     {
         $user = User::factory()->withPersonalTeam()->create();

@@ -12,7 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
-        health: '/up',
+        // Deliberately omitted: Laravel's built-in `health: '/up'` route
+        // always returns 200 without checking anything, which coexists
+        // badly with the app's own deep `/health` check (database, Redis,
+        // queue heartbeat). Wiring a load balancer or orchestrator to `/up`
+        // by convention would mask real outages that `/health` is built to
+        // catch. See routes/web.php for the real health checks.
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
