@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Event;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<Event>
@@ -54,7 +55,10 @@ class EventFactory extends Factory
         $event = $this->faker->randomElement($eventTypes);
 
         return [
-            'name' => $event['name'],
+            // Append a random suffix so repeated factory calls for the same
+            // user can't collide against the (user_id, name) unique
+            // constraint (see #100).
+            'name' => $event['name'].'_'.Str::random(6),
             'description' => $event['description'],
         ];
     }
