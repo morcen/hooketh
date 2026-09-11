@@ -301,6 +301,8 @@ Webhooks include security headers for verification:
 
 - `X-Webhook-Secret`: HMAC-SHA256 signature of the payload
 - `X-Webhook-Event`: The event name that triggered the webhook
+- `X-Webhook-Delivery-Id`: The delivery's unique ID. Stable across retries of the same delivery — use it to dedupe if the same delivery is received more than once (e.g. due to a network-level retry or a manual retry).
+- `X-Webhook-Attempt`: The attempt number for this delivery (`1` for the first attempt, incrementing on each retry)
 - `User-Agent`: Webhook-Management-Platform/1.0
 
 Example verification (Node.js):
