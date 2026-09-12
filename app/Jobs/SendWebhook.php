@@ -149,6 +149,8 @@ class SendWebhook implements ShouldQueue
                     'Content-Type' => 'application/json',
                     'X-Webhook-Secret' => hash_hmac('sha256', json_encode($payload), $endpoint->secret_key),
                     'X-Webhook-Event' => $event->name,
+                    'X-Webhook-Delivery-Id' => (string) $this->delivery->id,
+                    'X-Webhook-Attempt' => (string) $this->delivery->attempt_count,
                     'User-Agent' => 'Webhook-Management-Platform/1.0',
                 ])
                 ->post($endpoint->url, $payload);
