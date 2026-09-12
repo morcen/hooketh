@@ -92,6 +92,29 @@ test.describe('Events', () => {
         await expect(page).toHaveURL(/events/, { timeout: 10_000 })
     })
 
+    test('rejects invalid JSON payload edits instead of silently discarding them', async ({ page }) => {
+        await page.goto('/events')
+        const eventCard = page.locator('.bg-white').filter({ hasText: EVENT_NAME }).first()
+        await eventCard.locator('button').filter({ hasText: '' }).last().click()
+        await page.getByRole('link', { name: /edit event/i }).click()
+
+        const updateButton = page.getByRole('button', { name: /save|update/i })
+        await expect(updateButton).toBeEnabled()
+
+        // Break the JSON - the Update button must disable and an error must appear,
+        // instead of silently keeping the last valid value and reporting success.
+        await page.fill('#payload', '{ "user_id": 1, ')
+        await expect(page.getByText(/invalid json/i)).toBeVisible()
+        await expect(updateButton).toBeDisabled()
+
+        await expect(page).toHaveURL(/events\/\d+\/edit/)
+
+        // Fixing the JSON clears the error and re-enables saving.
+        await page.fill('#payload', JSON.stringify({ user_id: 1 }))
+        await expect(page.getByText(/invalid json/i)).not.toBeVisible()
+        await expect(updateButton).toBeEnabled()
+    })
+
     test('opens manage endpoints modal', async ({ page }) => {
         const eventCard = page.locator('.bg-white').filter({ hasText: EVENT_NAME }).first()
         await eventCard.locator('button').filter({ hasText: '' }).last().click()
