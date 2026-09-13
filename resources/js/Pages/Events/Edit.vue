@@ -69,7 +69,7 @@
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 This JSON template will be used when triggering the event. Use variables like {<!-- -->{user_id}<!-- -->} for dynamic values.
                             </p>
-                            <InputError :message="form.errors.payload" class="mt-2" />
+                            <InputError :message="payloadJsonError || form.errors.payload" class="mt-2" />
                         </div>
 
                         <div>
@@ -84,14 +84,14 @@
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Optional. Define expected payload fields using Laravel validation rules. Trigger requests that don't match will be rejected with a 422.
                             </p>
-                            <InputError :message="form.errors.schema" class="mt-2" />
+                            <InputError :message="schemaJsonError || form.errors.schema" class="mt-2" />
                         </div>
 
                         <div class="flex items-center justify-end gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
                             <Link :href="route('events')">
                                 <SecondaryButton type="button">Cancel</SecondaryButton>
                             </Link>
-                            <PrimaryButton type="submit" :disabled="form.processing">
+                            <PrimaryButton type="submit" :disabled="form.processing || !!payloadJsonError || !!schemaJsonError">
                                 {{ form.processing ? 'Saving...' : 'Update Event' }}
                             </PrimaryButton>
                         </div>
@@ -127,16 +127,46 @@ const form = useForm({
 
 const payloadText = ref(props.event.payload ? JSON.stringify(props.event.payload, null, 2) : '')
 const schemaText = ref(props.event.schema ? JSON.stringify(props.event.schema, null, 2) : '')
+const payloadJsonError = ref('')
+const schemaJsonError = ref('')
 
 watch(payloadText, (val) => {
-    try { form.payload = val ? JSON.parse(val) : null } catch {}
+    if (!val) {
+        form.payload = null
+        payloadJsonError.value = ''
+        return
+    }
+
+    try {
+        form.payload = JSON.parse(val)
+        payloadJsonError.value = ''
+    } catch (e) {
+        // Invalid JSON - surface the error and stop the stale value from being submitted
+        payloadJsonError.value = 'Invalid JSON: ' + e.message
+    }
 })
 
 watch(schemaText, (val) => {
-    try { form.schema = val ? JSON.parse(val) : null } catch {}
+    if (!val) {
+        form.schema = null
+        schemaJsonError.value = ''
+        return
+    }
+
+    try {
+        form.schema = JSON.parse(val)
+        schemaJsonError.value = ''
+    } catch (e) {
+        // Invalid JSON - surface the error and stop the stale value from being submitted
+        schemaJsonError.value = 'Invalid JSON: ' + e.message
+    }
 })
 
 function save() {
+    if (payloadJsonError.value || schemaJsonError.value) {
+        return
+    }
+
     form.put(route('events.update', props.event.id), {
         onSuccess: () => router.visit(route('events')),
     })
