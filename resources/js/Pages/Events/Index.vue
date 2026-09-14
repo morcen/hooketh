@@ -230,7 +230,7 @@
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             This JSON template will be used when triggering the event. Use variables like {<!-- -->{user_id}<!-- -->} for dynamic values.
                         </p>
-                        <InputError :message="form.errors.payload" class="mt-2" />
+                        <InputError :message="payloadJsonError || form.errors.payload" class="mt-2" />
                     </div>
 
                     <div>
@@ -245,7 +245,7 @@
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             Optional. Define expected payload fields using Laravel validation rules. Trigger requests that don't match will be rejected with a 422.
                         </p>
-                        <InputError :message="form.errors.schema" class="mt-2" />
+                        <InputError :message="schemaJsonError || form.errors.schema" class="mt-2" />
                     </div>
                 </form>
             </template>
@@ -257,7 +257,7 @@
 
                 <PrimaryButton
                     @click="saveEvent"
-                    :disabled="form.processing"
+                    :disabled="form.processing || !!payloadJsonError || !!schemaJsonError"
                     class="ml-3"
                 >
                     {{ form.processing ? 'Saving...' : 'Create' }}
@@ -388,6 +388,8 @@ const managingEvent = ref(null)
 const triggeringEvent = ref(null)
 const payloadText = ref('')
 const schemaText = ref('')
+const payloadJsonError = ref('')
+const schemaJsonError = ref('')
 const triggerPayload = ref('')
 const triggerProcessing = ref(false)
 const selectedEndpoints = ref([])
@@ -433,18 +435,34 @@ const availableEndpoints = computed(() => props.endpoints || [])
 
 // Watch for payload changes
 watch(payloadText, (newValue) => {
+    if (!newValue) {
+        form.payload = null
+        payloadJsonError.value = ''
+        return
+    }
+
     try {
-        form.payload = newValue ? JSON.parse(newValue) : null
+        form.payload = JSON.parse(newValue)
+        payloadJsonError.value = ''
     } catch (e) {
-        // Invalid JSON - will be handled by backend validation
+        // Invalid JSON - surface the error and stop the stale value from being submitted
+        payloadJsonError.value = 'Invalid JSON: ' + e.message
     }
 })
 
 watch(schemaText, (newValue) => {
+    if (!newValue) {
+        form.schema = null
+        schemaJsonError.value = ''
+        return
+    }
+
     try {
-        form.schema = newValue ? JSON.parse(newValue) : null
+        form.schema = JSON.parse(newValue)
+        schemaJsonError.value = ''
     } catch (e) {
-        // Invalid JSON - will be handled by backend validation
+        // Invalid JSON - surface the error and stop the stale value from being submitted
+        schemaJsonError.value = 'Invalid JSON: ' + e.message
     }
 })
 
@@ -455,9 +473,15 @@ function closeModal() {
     form.clearErrors()
     payloadText.value = ''
     schemaText.value = ''
+    payloadJsonError.value = ''
+    schemaJsonError.value = ''
 }
 
 function saveEvent() {
+    if (payloadJsonError.value || schemaJsonError.value) {
+        return
+    }
+
     form.post(route('events.store'), {
         onSuccess: () => closeModal()
     })

@@ -44,6 +44,26 @@ test.describe('Events', () => {
         await expect(page.getByText(EVENT_NAME)).toBeVisible({ timeout: 10_000 })
     })
 
+    test('rejects invalid JSON payload in the create modal instead of silently discarding it', async ({ page }) => {
+        await page.getByRole('button', { name: /create event/i }).click()
+
+        const createButton = page.getByRole('button', { name: /^create$/i })
+        await expect(createButton).toBeEnabled()
+
+        // Break the JSON - the Create button must disable and an error must appear,
+        // instead of silently keeping the last valid value and reporting success.
+        await page.fill('#payload', '{ "user_id": 1, ')
+        await expect(page.getByText(/invalid json/i)).toBeVisible()
+        await expect(createButton).toBeDisabled()
+
+        // Fixing the JSON clears the error and re-enables saving.
+        await page.fill('#payload', JSON.stringify({ user_id: 1 }))
+        await expect(page.getByText(/invalid json/i)).not.toBeVisible()
+        await expect(createButton).toBeEnabled()
+
+        await page.getByRole('button', { name: /cancel/i }).click()
+    })
+
     test('searches events by name', async ({ page }) => {
         await page.fill('input[placeholder*="Search"]', EVENT_NAME)
         await expect(page.getByText(EVENT_NAME)).toBeVisible({ timeout: 8_000 })
