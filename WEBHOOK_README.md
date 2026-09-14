@@ -366,7 +366,7 @@ sudo supervisorctl start webhook-worker:*
 ## Commands
 
 - `php artisan webhooks:process-retries` — Process failed webhook deliveries that are ready for retry
-- `php artisan queue:heartbeat` — Write a heartbeat timestamp to Redis (run by the scheduler every minute; used by the `/health` endpoint to verify the scheduler is alive)
+- `php artisan queue:heartbeat` — Dispatch a job onto the `webhooks` queue that writes a heartbeat timestamp to Redis when a queue worker processes it (run by the scheduler every minute; used by the `/health/detailed` endpoint to verify a queue worker, not just the scheduler, is alive)
 
 ## Development
 

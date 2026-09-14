@@ -398,7 +398,7 @@ Authorization: Bearer <sanctum-token>
 }
 ```
 
-`queue_worker` is `unknown` if the application has never been fully started (no heartbeat key in Redis yet). The heartbeat is written by `php artisan queue:heartbeat`, which the scheduler container runs every minute.
+`queue_worker` is `unknown` if the application has never been fully started (no heartbeat key in Redis yet). The scheduler container runs `php artisan queue:heartbeat` every minute, which dispatches a job onto the `webhooks` queue; the heartbeat key is only written once an actual queue worker processes that job, so staleness reflects worker liveness, not just the scheduler being up.
 
 ### Docker Health Check
 Add to Dockerfile:

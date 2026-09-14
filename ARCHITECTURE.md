@@ -74,7 +74,7 @@ graph TB
 - **Session Management**: User session data
 - **Cache Layer**: Application-level caching
 - **Queue Backend**: Background job processing
-- **Scheduler Heartbeat**: `queue:heartbeat` key written every minute to verify the scheduler container is alive
+- **Queue Worker Heartbeat**: `queue:heartbeat` key, written by a job dispatched onto the `webhooks` queue every minute, so it's only updated when an actual queue worker (not just the scheduler) is alive and processing jobs
 
 ### 3. Background Processing
 
@@ -83,13 +83,14 @@ graph TB
 // Job Types
 - SendWebhook: Handle webhook HTTP POST with HMAC signing, timing, and retry logic
 - ProcessWebhookRetries (command): Pick up failed deliveries ready for retry
-- QueueHeartbeat (command): Write alive timestamp to Redis every minute
+- QueueHeartbeat (command): Dispatch a WriteQueueHeartbeat job onto the `webhooks` queue every minute
+- WriteQueueHeartbeat (job): Write alive timestamp to Redis when a queue worker processes it
 ```
 
 #### Scheduler
 - **Laravel Scheduler**: Cron-like job scheduling via `routes/console.php`
 - **Retry Logic**: `webhooks:process-retries` runs every minute — exponential backoff delays configured via `WEBHOOK_BACKOFF_DELAYS`
-- **Health Heartbeat**: `queue:heartbeat` runs every minute; the `/health` endpoint reports `stale` if no heartbeat within 2 minutes
+- **Health Heartbeat**: `queue:heartbeat` runs every minute, dispatching a job onto the `webhooks` queue; `/health/detailed` reports `stale` if a queue worker hasn't processed one within 2 minutes
 
 ## 📊 Data Models & Relationships
 
@@ -310,7 +311,7 @@ GET /health
 // HTTP 200 if healthy, 503 if any service is degraded
 ```
 
-`queue_worker` is `stale` (and the response is 503) if the scheduler heartbeat in Redis is older than 2 minutes, indicating the scheduler container is down.
+`queue_worker` is `stale` (and the response is 503) if the queue worker heartbeat in Redis is older than 2 minutes, indicating a queue worker isn't processing jobs — whether because the worker process died or the scheduler stopped dispatching the heartbeat job.
 
 ### Error Handling
 - **Graceful Degradation**: Fallback mechanisms for service failures

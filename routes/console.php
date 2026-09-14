@@ -15,5 +15,8 @@ Artisan::command('inspire', function () {
 // double-dispatch the same Delivery to the customer's endpoint.
 Schedule::command('webhooks:process-retries')->everyMinute()->withoutOverlapping();
 
-// Write a heartbeat so the /health endpoint can verify the scheduler is alive
+// Dispatch a heartbeat job onto the webhooks queue every minute. The
+// heartbeat key is only written once a live queue worker actually
+// processes the job, so /health/detailed can tell a dead worker apart
+// from a dead scheduler instead of conflating the two (see #108).
 Schedule::command('queue:heartbeat')->everyMinute();
