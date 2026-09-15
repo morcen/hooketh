@@ -51,7 +51,7 @@ class QueueHeartbeatTest extends TestCase
             ->once()
             ->with('queue:heartbeat', $now->timestamp);
 
-        (new WriteQueueHeartbeat)->handle();
+        (new WriteQueueHeartbeat())->handle();
     }
 
     public function test_write_queue_heartbeat_job_runs_on_the_webhooks_queue(): void
@@ -60,7 +60,7 @@ class QueueHeartbeatTest extends TestCase
         // has stopped processing deliveries also stops processing this job
         // — which is exactly what makes the heartbeat a real liveness
         // signal for the worker that matters.
-        $job = new WriteQueueHeartbeat;
+        $job = new WriteQueueHeartbeat();
 
         $this->assertSame('webhooks', $job->queue);
     }
