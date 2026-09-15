@@ -327,8 +327,9 @@
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                             This payload will be sent to all subscribed endpoints.
                         </p>
+                        <InputError :message="triggerError" class="mt-2" />
                     </div>
-                    
+
                     <div v-if="triggeringEvent?.endpoints?.length">
                         <h4 class="font-medium text-gray-900 dark:text-white mb-2">
                             Will be sent to {{ triggeringEvent.endpoints.length }} endpoint(s):
@@ -392,6 +393,7 @@ const payloadJsonError = ref('')
 const schemaJsonError = ref('')
 const triggerPayload = ref('')
 const triggerProcessing = ref(false)
+const triggerError = ref('')
 const selectedEndpoints = ref([])
 
 // Form
@@ -535,12 +537,14 @@ function saveEndpointSubscriptions() {
 function triggerEvent(event) {
     triggeringEvent.value = event
     triggerPayload.value = event.payload ? JSON.stringify(event.payload, null, 2) : '{}'
+    triggerError.value = ''
     showTriggerModal.value = true
 }
 
 function executeEventTrigger() {
     triggerProcessing.value = true
-    
+    triggerError.value = ''
+
     let payload
     try {
         payload = JSON.parse(triggerPayload.value)
@@ -559,8 +563,12 @@ function executeEventTrigger() {
             // Show success message or redirect to deliveries
             alert('Event triggered successfully!')
         },
-        onError: () => {
+        onError: (errors) => {
             triggerProcessing.value = false
+            const messages = Object.values(errors || {}).flat()
+            triggerError.value = messages.length
+                ? messages.join(' ')
+                : 'Failed to trigger event. Please try again.'
         }
     })
 }

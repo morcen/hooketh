@@ -413,7 +413,12 @@ function editEndpoint(endpoint) {
 async function saveEndpoint() {
     if (editingEndpoint.value) {
         form.put(route('endpoints.update', editingEndpoint.value.id), {
-            onSuccess: () => closeModal()
+            onSuccess: () => closeModal(),
+            onError: (errors) => {
+                if (!errors || Object.keys(errors).length === 0) {
+                    alert('Failed to save endpoint. Please try again.')
+                }
+            }
         })
     } else {
         form.processing = true
@@ -430,6 +435,8 @@ async function saveEndpoint() {
         } catch (error) {
             if (error.response?.data?.errors) {
                 form.setError(error.response.data.errors)
+            } else {
+                alert('Failed to save endpoint. Please try again.')
             }
         } finally {
             form.processing = false
@@ -440,6 +447,8 @@ async function saveEndpoint() {
 function toggleEndpoint(endpoint) {
     router.patch(route('endpoints.update', endpoint.id), {
         is_active: !endpoint.is_active
+    }, {
+        onError: () => alert('Failed to update endpoint status. Please try again.')
     })
 }
 
@@ -454,7 +463,8 @@ function testEndpoint(endpoint) {
         onSuccess: (response) => {
             testResult.value = response.props.testResult
             showTestModal.value = true
-        }
+        },
+        onError: () => alert('Failed to test endpoint connection. Please try again.')
     })
 }
 
