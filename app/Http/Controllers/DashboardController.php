@@ -48,13 +48,34 @@ class DashboardController extends Controller
 
     public function events(Request $request): Response
     {
-        $events = $request->user()->events()
-            ->with('endpoints')
-            ->paginate(15);
+        $query = $request->user()->events()->with('endpoints');
+
+        if ($request->filled('search')) {
+            $search = $request->string('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('event_type', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('type')) {
+            $query->where('event_type', $request->string('type'));
+        }
+
+        $events = $query->paginate(15)->withQueryString();
+
+        $eventTypes = $request->user()->events()
+            ->whereNotNull('event_type')
+            ->distinct()
+            ->orderBy('event_type')
+            ->pluck('event_type');
 
         return Inertia::render('Events/Index', [
             'events' => $events,
             'endpoints' => $request->user()->endpoints()->get(['id', 'name', 'url', 'description', 'is_active']),
+            'eventTypes' => $eventTypes,
+            'filters' => $request->only(['search', 'type']),
         ]);
     }
 
