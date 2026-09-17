@@ -25,12 +25,14 @@
                                     v-model="search"
                                     placeholder="Search events..."
                                     class="w-full"
+                                    @keyup.enter="applyFilters"
                                 />
                             </div>
                             <div class="flex gap-2">
-                                <select 
-                                    v-model="typeFilter" 
+                                <select
+                                    v-model="typeFilter"
                                     class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
+                                    @change="applyFilters"
                                 >
                                     <option value="">All Types</option>
                                     <option v-for="type in eventTypes" :key="type" :value="type">
@@ -377,11 +379,13 @@ import Pagination from '@/Components/Pagination.vue'
 const props = defineProps({
     events: Object,
     endpoints: Array,
+    eventTypes: Array,
+    filters: Object,
 })
 
 // State
-const search = ref('')
-const typeFilter = ref('')
+const search = ref(props.filters?.search || '')
+const typeFilter = ref(props.filters?.type || '')
 const showCreateModal = ref(false)
 const showEndpointsModal = ref(false)
 const showTriggerModal = ref(false)
@@ -406,32 +410,7 @@ const form = useForm({
 })
 
 // Computed
-const filteredEvents = computed(() => {
-    let filtered = props.events.data || []
-    
-    if (search.value) {
-        const searchLower = search.value.toLowerCase()
-        filtered = filtered.filter(event => 
-            event.name.toLowerCase().includes(searchLower) ||
-            (event.event_type && event.event_type.toLowerCase().includes(searchLower)) ||
-            (event.description && event.description.toLowerCase().includes(searchLower))
-        )
-    }
-    
-    if (typeFilter.value) {
-        filtered = filtered.filter(event => event.event_type === typeFilter.value)
-    }
-    
-    return filtered
-})
-
-const eventTypes = computed(() => {
-    const types = new Set()
-    props.events.data?.forEach(event => {
-        if (event.event_type) types.add(event.event_type)
-    })
-    return Array.from(types).sort()
-})
+const filteredEvents = computed(() => props.events.data || [])
 
 const availableEndpoints = computed(() => props.endpoints || [])
 
@@ -577,9 +556,20 @@ function viewDeliveries(event) {
     router.get(route('deliveries'), { event_id: event.id })
 }
 
+function applyFilters() {
+    router.get(route('events'), {
+        search: search.value,
+        type: typeFilter.value,
+    }, {
+        preserveState: true,
+        replace: true,
+    })
+}
+
 function clearFilters() {
     search.value = ''
     typeFilter.value = ''
+    applyFilters()
 }
 
 function formatDate(dateString) {
