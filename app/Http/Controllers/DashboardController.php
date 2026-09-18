@@ -37,12 +37,26 @@ class DashboardController extends Controller
 
     public function endpoints(Request $request): Response
     {
-        $endpoints = $request->user()->endpoints()
-            ->with('events')
-            ->paginate(15);
+        $query = $request->user()->endpoints()->with('events');
+
+        if ($request->filled('search')) {
+            $search = $request->string('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('url', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->string('status') === 'active');
+        }
+
+        $endpoints = $query->paginate(15)->withQueryString();
 
         return Inertia::render('Endpoints/Index', [
             'endpoints' => $endpoints,
+            'filters' => $request->only(['search', 'status']),
         ]);
     }
 
