@@ -48,10 +48,11 @@
                                 v-model="search"
                                 placeholder="Search by name, URL, or description"
                                 class="w-full pl-9"
+                                @keyup.enter="applyFilters"
                             />
                         </div>
                         <div class="flex flex-col gap-3 sm:flex-row">
-                            <select v-model="statusFilter" class="app-select min-w-40">
+                            <select v-model="statusFilter" class="app-select min-w-40" @change="applyFilters">
                                 <option value="">All statuses</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
@@ -312,10 +313,11 @@ import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     endpoints: Object,
+    filters: Object,
 })
 
-const search = ref('')
-const statusFilter = ref('')
+const search = ref(props.filters?.search || '')
+const statusFilter = ref(props.filters?.status || '')
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
 const showTestModal = ref(false)
@@ -333,28 +335,7 @@ const form = useForm({
     is_active: true,
 })
 
-const filteredEndpoints = computed(() => {
-    let filtered = props.endpoints.data || []
-
-    if (search.value) {
-        const searchLower = search.value.toLowerCase()
-        filtered = filtered.filter(endpoint =>
-            endpoint.name.toLowerCase().includes(searchLower) ||
-            endpoint.url.toLowerCase().includes(searchLower) ||
-            (endpoint.description && endpoint.description.toLowerCase().includes(searchLower))
-        )
-    }
-
-    if (statusFilter.value) {
-        filtered = filtered.filter(endpoint => {
-            if (statusFilter.value === 'active') return endpoint.is_active
-            if (statusFilter.value === 'inactive') return !endpoint.is_active
-            return true
-        })
-    }
-
-    return filtered
-})
+const filteredEndpoints = computed(() => props.endpoints.data || [])
 
 const endpointStats = computed(() => {
     const all = props.endpoints.data || []
@@ -477,9 +458,20 @@ async function regenerateSecret() {
     }
 }
 
+function applyFilters() {
+    router.get(route('endpoints'), {
+        search: search.value,
+        status: statusFilter.value,
+    }, {
+        preserveState: true,
+        replace: true,
+    })
+}
+
 function clearFilters() {
     search.value = ''
     statusFilter.value = ''
+    applyFilters()
 }
 
 function formatDate(dateString) {
