@@ -141,6 +141,18 @@ class DashboardController extends Controller
             $query->whereDate('created_at', '<=', $request->to_date);
         }
 
+        $statusCounts = (clone $query)
+            ->select('status')
+            ->selectRaw('count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $deliveryCounts = [
+            'successful' => (int) ($statusCounts['success'] ?? 0),
+            'failed' => (int) ($statusCounts['failed'] ?? 0),
+            'pending' => (int) ($statusCounts['pending'] ?? 0) + (int) ($statusCounts['retrying'] ?? 0),
+        ];
+
         $deliveries = $query->latest()->paginate(20);
 
         // Get filter options
@@ -148,6 +160,7 @@ class DashboardController extends Controller
 
         return Inertia::render('Deliveries/Index', [
             'deliveries' => $deliveries,
+            'deliveryCounts' => $deliveryCounts,
             'endpoints' => $endpoints,
             'filters' => $request->only(['status', 'endpoint_id', 'event_id', 'event_name', 'from_date', 'to_date']),
             'filteredEvent' => $filteredEvent,

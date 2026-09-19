@@ -385,6 +385,7 @@ import Pagination from '@/Components/Pagination.vue'
 
 const props = defineProps({
     deliveries: Object,
+    deliveryCounts: Object,
     endpoints: Array,
     filters: Object,
     filteredEvent: Object,
@@ -404,17 +405,11 @@ const filters = ref({
 })
 
 // Computed
-const successfulCount = computed(() => {
-    return props.deliveries.data?.filter(d => d.status === 'success').length || 0
-})
+const successfulCount = computed(() => props.deliveryCounts?.successful || 0)
 
-const failedCount = computed(() => {
-    return props.deliveries.data?.filter(d => d.status === 'failed').length || 0
-})
+const failedCount = computed(() => props.deliveryCounts?.failed || 0)
 
-const pendingCount = computed(() => {
-    return props.deliveries.data?.filter(d => ['pending', 'retrying'].includes(d.status)).length || 0
-})
+const pendingCount = computed(() => props.deliveryCounts?.pending || 0)
 
 const hasFilters = computed(() => {
     return filters.value.status || filters.value.endpoint_id || filters.value.event_id
@@ -476,7 +471,7 @@ function retryFailedDeliveries() {
 }
 
 function refreshDeliveries() {
-    router.reload({ only: ['deliveries'] })
+    router.reload({ only: ['deliveries', 'deliveryCounts'] })
 }
 
 function applyFilters() {
