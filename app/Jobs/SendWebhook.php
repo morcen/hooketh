@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Delivery;
 use App\Rules\SafeWebhookUrl;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -195,6 +196,27 @@ class SendWebhook implements ShouldQueue
                     $this->handleFailedDelivery();
                 }
             }
+        } catch (DecryptException $e) {
+            // Thrown when $endpoint->secret_key can't be decrypted under the
+            // current APP_KEY/APP_PREVIOUS_KEYS — almost always the result of
+            // an APP_KEY rotation performed without preserving the old key in
+            // APP_PREVIOUS_KEYS. Flagged distinctly (critical, not error) and
+            // with an unambiguous message so this looks nothing like ordinary
+            // endpoint downtime; see DEPLOYMENT.md's APP_KEY rotation runbook.
+            Log::critical('Webhook delivery failed: unable to decrypt endpoint secret_key. This usually means APP_KEY was rotated without preserving the previous key in APP_PREVIOUS_KEYS.', [
+                'delivery_id' => $this->delivery->id,
+                'endpoint_id' => $endpoint->id,
+            ]);
+
+            $this->delivery->update([
+                'status' => 'failed',
+                'response_code' => null,
+                'response_body' => 'Delivery failed: unable to decrypt endpoint secret key. This usually indicates APP_KEY was rotated without preserving the previous key in APP_PREVIOUS_KEYS.',
+                'delivered_at' => null,
+                'next_retry_at' => null,
+            ]);
+
+            $this->handleFailedDelivery();
         } catch (Throwable $e) {
             Log::error('Webhook delivery exception', [
                 'delivery_id' => $this->delivery->id,
