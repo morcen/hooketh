@@ -343,6 +343,22 @@ server {
 - Regular backups
 - Use connection pooling
 
+### APP_KEY Rotation
+
+`Endpoint.secret_key` (the HMAC signing secret used for every webhook delivery) is encrypted at rest using `APP_KEY`. **Never rotate `APP_KEY` by simply generating a new value and replacing the old one** — every `Endpoint::secret_key` becomes permanently undecryptable the moment the old key is gone, since it's the only copy of the plaintext secret anywhere. The failure is silent: deliveries start throwing decryption errors that look identical to ordinary endpoint downtime, and burn through retries for a condition retries can never fix.
+
+To rotate `APP_KEY` safely:
+
+1. Move the **current** `APP_KEY` value into `APP_PREVIOUS_KEYS` (comma-separated if it already holds prior keys), so Laravel can still decrypt values encrypted under it.
+2. Generate and set the **new** `APP_KEY` (`php artisan key:generate --ansi`).
+3. Re-save every `Endpoint` row so `secret_key` is re-encrypted under the new key (touching the `encrypted` cast re-encrypts on save), e.g.:
+   ```bash
+   php artisan tinker --execute="App\Models\Endpoint::withTrashed()->each(fn (\$e) => \$e->save());"
+   ```
+4. Once every row has been re-saved, remove the old key from `APP_PREVIOUS_KEYS`.
+
+Until step 3 completes, keep the old key in `APP_PREVIOUS_KEYS` — removing it early re-creates the same permanent-decryption-failure problem this runbook exists to avoid.
+
 ## 📊 Monitoring and Health Checks
 
 ### Health Check Endpoint
