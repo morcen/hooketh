@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -52,13 +53,15 @@ class DeliveryController extends Controller
             $query->where('event_id', $request->input('event_id'));
         }
 
-        // Filter by date range
+        // Filter by date range. Comparing against a plain timestamp range
+        // (rather than wrapping created_at in whereDate()) keeps the query
+        // sargable so it can use the index on created_at.
         if ($request->has('from_date')) {
-            $query->whereDate('created_at', '>=', $request->input('from_date'));
+            $query->where('created_at', '>=', Carbon::parse($request->input('from_date'))->startOfDay());
         }
 
         if ($request->has('to_date')) {
-            $query->whereDate('created_at', '<=', $request->input('to_date'));
+            $query->where('created_at', '<', Carbon::parse($request->input('to_date'))->addDay()->startOfDay());
         }
 
         $deliveries = $query->orderBy('created_at', 'desc')
