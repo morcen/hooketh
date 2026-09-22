@@ -88,7 +88,11 @@ class DashboardController extends Controller
 
         return Inertia::render('Events/Index', [
             'events' => $events,
-            'endpoints' => $request->user()->endpoints()->get(['id', 'name', 'url', 'description', 'is_active']),
+            'endpoints' => $request->user()->endpoints()
+                ->select(['id', 'name', 'url', 'description', 'is_active'])
+                ->orderBy('name')
+                ->limit(500)
+                ->get(),
             'eventTypes' => $eventTypes,
             'filters' => $request->only(['search', 'type']),
         ]);
@@ -99,7 +103,11 @@ class DashboardController extends Controller
         abort_if($event->user_id !== $request->user()->id, 404);
 
         $event->load('endpoints');
-        $endpoints = $request->user()->endpoints()->get();
+        $endpoints = $request->user()->endpoints()
+            ->select(['id', 'name', 'url', 'description', 'is_active'])
+            ->orderBy('name')
+            ->limit(500)
+            ->get();
 
         return Inertia::render('Events/Edit', [
             'event' => $event,
