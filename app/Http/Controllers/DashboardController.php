@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Delivery;
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -133,12 +134,15 @@ class DashboardController extends Controller
             $query->whereHas('event', fn ($q) => $q->where('name', 'like', '%'.$request->event_name.'%'));
         }
 
+        // Comparing against a plain timestamp range (rather than wrapping
+        // created_at in whereDate()) keeps the query sargable so it can use
+        // the index on created_at.
         if ($request->has('from_date') && $request->from_date) {
-            $query->whereDate('created_at', '>=', $request->from_date);
+            $query->where('created_at', '>=', Carbon::parse($request->from_date)->startOfDay());
         }
 
         if ($request->has('to_date') && $request->to_date) {
-            $query->whereDate('created_at', '<=', $request->to_date);
+            $query->where('created_at', '<', Carbon::parse($request->to_date)->addDay()->startOfDay());
         }
 
         $statusCounts = (clone $query)
