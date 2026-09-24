@@ -450,11 +450,16 @@ function testEndpoint(endpoint) {
 }
 
 async function regenerateSecret() {
-    if (confirm('Are you sure you want to regenerate the secret key? This will invalidate the current key.')) {
-        const endpointId = editingEndpoint.value.id
-        closeModal()
+    if (!confirm('Are you sure you want to regenerate the secret key? This will invalidate the current key.')) {
+        return
+    }
+    const endpointId = editingEndpoint.value.id
+    try {
         const response = await axios.post(route('endpoints.regenerate-secret', endpointId))
+        closeModal()
         showOneTimeSecret(response.data.plain_secret)
+    } catch (error) {
+        alert('Failed to regenerate secret. Please try again.')
     }
 }
 
