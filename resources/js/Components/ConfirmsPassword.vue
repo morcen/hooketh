@@ -42,6 +42,11 @@ const startConfirmingPassword = () => {
 
             setTimeout(() => passwordInput.value.focus(), 250);
         }
+    }).catch(() => {
+        form.error = 'We were unable to verify your session. Please enter your password to continue.';
+        confirmingPassword.value = true;
+
+        setTimeout(() => passwordInput.value.focus(), 250);
     });
 };
 
