@@ -415,7 +415,19 @@ async function saveEndpoint() {
             showOneTimeSecret(response.data.plain_secret)
         } catch (error) {
             if (error.response?.data?.errors) {
-                form.setError(error.response.data.errors)
+                // Laravel's JSON validation-error response shapes each field
+                // as an array of messages. A normal Inertia form submission
+                // flattens these before they reach the client, but this is a
+                // raw axios call, so it must be flattened here too — otherwise
+                // form.setError() stores the array itself and InputError.vue
+                // (which expects a string) renders it as a JSON blob.
+                const errors = Object.fromEntries(
+                    Object.entries(error.response.data.errors).map(([field, messages]) => [
+                        field,
+                        Array.isArray(messages) ? messages[0] : messages,
+                    ])
+                )
+                form.setError(errors)
             } else {
                 alert('Failed to save endpoint. Please try again.')
             }
