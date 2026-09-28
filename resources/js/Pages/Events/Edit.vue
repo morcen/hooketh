@@ -97,6 +97,48 @@
                         </div>
                     </form>
                 </div>
+
+                <div class="mt-6 bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
+                    <div class="p-6 space-y-4">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Subscribed Endpoints</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Choose which endpoints receive this event when it's triggered.
+                            </p>
+                        </div>
+
+                        <div v-if="endpoints.length > 0" class="space-y-4">
+                            <div
+                                v-for="endpoint in endpoints"
+                                :key="endpoint.id"
+                                class="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                            >
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-gray-900 dark:text-white">{{ endpoint.name }}</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400 truncate max-w-[40ch]">{{ endpoint.url }}</p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 truncate max-w-[40ch]">
+                                        {{ endpoint.description || 'No description' }}
+                                    </p>
+                                </div>
+                                <div class="ml-4">
+                                    <Checkbox
+                                        :checked="isEndpointSubscribed(endpoint.id)"
+                                        @update:checked="toggleEndpointSubscription(endpoint.id)"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="text-center py-8">
+                            <p class="text-gray-500 dark:text-gray-400">No endpoints available. Create endpoints first.</p>
+                        </div>
+
+                        <div class="flex items-center justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <PrimaryButton @click="saveEndpointSubscriptions" :disabled="endpointsProcessing">
+                                {{ endpointsProcessing ? 'Saving...' : 'Save Endpoint Subscriptions' }}
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </AppLayout>
@@ -111,6 +153,7 @@ import SecondaryButton from '@/Components/SecondaryButton.vue'
 import TextInput from '@/Components/TextInput.vue'
 import InputLabel from '@/Components/InputLabel.vue'
 import InputError from '@/Components/InputError.vue'
+import Checkbox from '@/Components/Checkbox.vue'
 
 const props = defineProps({
     event: Object,
@@ -169,6 +212,33 @@ function save() {
 
     form.put(route('events.update', props.event.id), {
         onSuccess: () => router.visit(route('events')),
+    })
+}
+
+const selectedEndpoints = ref(props.event.endpoints?.map(e => e.id) || [])
+const endpointsProcessing = ref(false)
+
+function isEndpointSubscribed(endpointId) {
+    return selectedEndpoints.value.includes(endpointId)
+}
+
+function toggleEndpointSubscription(endpointId) {
+    if (selectedEndpoints.value.includes(endpointId)) {
+        selectedEndpoints.value = selectedEndpoints.value.filter(id => id !== endpointId)
+    } else {
+        selectedEndpoints.value.push(endpointId)
+    }
+}
+
+function saveEndpointSubscriptions() {
+    endpointsProcessing.value = true
+
+    router.post(route('events.endpoints', props.event.id), {
+        endpoint_ids: selectedEndpoints.value,
+    }, {
+        onFinish: () => {
+            endpointsProcessing.value = false
+        },
     })
 }
 </script>
