@@ -61,6 +61,31 @@ class SafeWebhookUrl implements ValidationRule
     }
 
     /**
+     * @var (callable(string): array<int, string>)|null
+     */
+    private static ?Closure $hostResolver = null;
+
+    /**
+     * Swap the DNS resolution behind resolveHost() for a deterministic fake,
+     * so tests can exercise "hostname resolves to nothing/something" without
+     * depending on live network conditions.
+     *
+     * @param  callable(string): array<int, string>  $resolver
+     */
+    public static function resolveHostUsing(callable $resolver): void
+    {
+        self::$hostResolver = Closure::fromCallable($resolver);
+    }
+
+    /**
+     * Restore the real DNS-based host resolver.
+     */
+    public static function resolveHostNormally(): void
+    {
+        self::$hostResolver = null;
+    }
+
+    /**
      * Resolve a webhook URL's host to a single validated, publicly routable
      * IP address, or null if the URL is unsafe/unresolvable.
      *
@@ -148,6 +173,10 @@ class SafeWebhookUrl implements ValidationRule
      */
     private static function resolveHost(string $host): array
     {
+        if (self::$hostResolver !== null) {
+            return (self::$hostResolver)($host);
+        }
+
         $records = @dns_get_record($host, DNS_A | DNS_AAAA);
 
         if ($records === false) {

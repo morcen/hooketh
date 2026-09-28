@@ -7,6 +7,13 @@ use Tests\TestCase;
 
 class SafeWebhookUrlTest extends TestCase
 {
+    protected function tearDown(): void
+    {
+        SafeWebhookUrl::resolveHostNormally();
+
+        parent::tearDown();
+    }
+
     public function test_public_ip_literal_url_is_safe(): void
     {
         $this->assertTrue(SafeWebhookUrl::isUrlSafe('https://8.8.8.8/webhook'));
@@ -38,7 +45,23 @@ class SafeWebhookUrlTest extends TestCase
 
     public function test_unresolvable_hostname_is_unsafe(): void
     {
+        SafeWebhookUrl::resolveHostUsing(fn (string $host) => []);
+
         $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://this-host-should-never-resolve.invalid/webhook'));
+    }
+
+    public function test_hostname_resolving_to_a_public_ip_is_safe(): void
+    {
+        SafeWebhookUrl::resolveHostUsing(fn (string $host) => ['8.8.8.8']);
+
+        $this->assertTrue(SafeWebhookUrl::isUrlSafe('http://example.test/webhook'));
+    }
+
+    public function test_hostname_resolving_to_a_private_ip_is_unsafe(): void
+    {
+        SafeWebhookUrl::resolveHostUsing(fn (string $host) => ['10.0.0.5']);
+
+        $this->assertFalse(SafeWebhookUrl::isUrlSafe('http://example.test/webhook'));
     }
 
     public function test_cgnat_shared_address_space_is_unsafe(): void
