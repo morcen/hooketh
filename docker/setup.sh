@@ -50,6 +50,10 @@ sleep 10
 echo "📦 Running database migrations..."
 docker-compose exec app php artisan migrate --force
 
+# Seed the database
+echo "🌱 Seeding database..."
+docker-compose exec app php artisan db:seed --force
+
 # Generate application key in container
 echo "🔑 Setting up application key in container..."
 docker-compose exec app php artisan key:generate --force

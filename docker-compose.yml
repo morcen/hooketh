@@ -38,8 +38,6 @@ services:
     env_file:
       - .env
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
       - DB_CONNECTION=pgsql
       - DB_HOST=db
       - DB_PORT=5432
@@ -71,8 +69,6 @@ services:
     env_file:
       - .env
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
       - DB_CONNECTION=pgsql
       - DB_HOST=db
       - DB_PORT=5432
@@ -102,8 +98,6 @@ services:
     env_file:
       - .env
     environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
       - DB_CONNECTION=pgsql
       - DB_HOST=db
       - DB_PORT=5432
