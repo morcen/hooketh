@@ -280,7 +280,7 @@
 
                 <!-- Pagination -->
                 <div v-if="deliveries.last_page > 1" class="mt-6">
-                    <Pagination :links="deliveries.links" />
+                    <Pagination :links="deliveries.links" :from="deliveries.from" :to="deliveries.to" :total="deliveries.total" />
                 </div>
             </div>
         </div>

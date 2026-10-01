@@ -167,7 +167,7 @@
 
                 <!-- Pagination -->
                 <div v-if="events.last_page > 1" class="mt-6">
-                    <Pagination :links="events.links" />
+                    <Pagination :links="events.links" :from="events.from" :to="events.to" :total="events.total" />
                 </div>
             </div>
         </div>
