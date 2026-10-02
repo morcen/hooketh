@@ -160,7 +160,7 @@
                 </div>
 
                 <div v-if="endpoints.last_page > 1" class="mt-6">
-                    <Pagination :links="endpoints.links" />
+                    <Pagination :links="endpoints.links" :from="endpoints.from" :to="endpoints.to" :total="endpoints.total" />
                 </div>
             </div>
         </div>
