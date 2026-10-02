@@ -272,7 +272,7 @@ REDIS_PORT=6379
 REDIS_PASSWORD=your-redis-password
 
 # Cache & Queue
-CACHE_DRIVER=redis
+CACHE_STORE=redis
 QUEUE_CONNECTION=redis
 SESSION_DRIVER=redis
 

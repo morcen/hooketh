@@ -48,7 +48,7 @@ services:
       - REDIS_PORT=6379
       - REDIS_PASSWORD=${REDIS_PASSWORD:-webhook_redis_password}
       - QUEUE_CONNECTION=redis
-      - CACHE_DRIVER=redis
+      - CACHE_STORE=redis
       - SESSION_DRIVER=redis
     volumes:
       - storage_data:/var/www/html/storage

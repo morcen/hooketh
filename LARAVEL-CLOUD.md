@@ -39,7 +39,7 @@ APP_URL=https://your-app-name.cloud.laravel.com
 DB_CONNECTION=pgsql
 
 # Cache & Queue  
-CACHE_DRIVER=redis
+CACHE_STORE=redis
 QUEUE_CONNECTION=redis
 SESSION_DRIVER=redis
 
