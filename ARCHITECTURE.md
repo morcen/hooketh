@@ -334,7 +334,7 @@ DB_DATABASE=webhook_management
 
 # Queue & Cache
 QUEUE_CONNECTION=redis
-CACHE_DRIVER=redis
+CACHE_STORE=redis
 REDIS_HOST=redis
 
 # Webhook delivery tuning

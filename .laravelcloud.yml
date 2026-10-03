@@ -37,7 +37,7 @@ environment:
   # DB_PASSWORD: provided by Laravel Cloud
   
   # Cache and queue configuration
-  CACHE_DRIVER: redis
+  CACHE_STORE: redis
   QUEUE_CONNECTION: redis
   SESSION_DRIVER: redis
   
