@@ -25,7 +25,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
         ]);
 
         $request->user()->events()->create($validated);
@@ -35,7 +35,7 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 404);
+        $this->authorize('update', $event);
 
         $validated = $request->validate([
             'name' => [
@@ -45,7 +45,7 @@ class EventController extends Controller
             'event_type' => 'nullable|string|max:255',
             'description' => 'nullable|string|max:1000',
             'payload' => 'nullable|array',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
         ]);
 
         $event->update($validated);
@@ -55,7 +55,7 @@ class EventController extends Controller
 
     public function destroy(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 404);
+        $this->authorize('delete', $event);
 
         $event->delete();
 
@@ -64,7 +64,7 @@ class EventController extends Controller
 
     public function syncEndpoints(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 404);
+        $this->authorize('syncEndpoints', $event);
 
         $validated = $request->validate([
             'endpoint_ids' => 'array',
@@ -82,10 +82,10 @@ class EventController extends Controller
 
     public function trigger(Request $request, Event $event): RedirectResponse
     {
-        abort_if($event->user_id !== $request->user()->id, 404);
+        $this->authorize('trigger', $event);
 
         $validated = $request->validate([
-            'payload' => ['required', 'array', new WebhookPayloadSize()],
+            'payload' => ['required', 'array', new WebhookPayloadSize],
         ]);
 
         $payload = $validated['payload'];

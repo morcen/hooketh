@@ -41,7 +41,7 @@ class EventController extends Controller
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id)->withoutTrashed(),
             ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -76,10 +76,7 @@ class EventController extends Controller
     public function show(Request $request, Event $event): JsonResponse
     {
         $this->authorizeAbility($request, 'read');
-
-        if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('view', $event);
 
         return response()->json($event->load([
             'endpoints',
@@ -95,10 +92,7 @@ class EventController extends Controller
     public function update(Request $request, Event $event): JsonResponse
     {
         $this->authorizeAbility($request, 'update');
-
-        if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('update', $event);
 
         $validator = Validator::make($request->all(), [
             'name' => [
@@ -106,7 +100,7 @@ class EventController extends Controller
                 Rule::unique('events', 'name')->where('user_id', $request->user()->id)->ignore($event->id)->withoutTrashed(),
             ],
             'description' => 'nullable|string|max:1000',
-            'schema' => ['nullable', 'array', new ValidEventSchema()],
+            'schema' => ['nullable', 'array', new ValidEventSchema],
             'endpoint_ids' => 'array',
             'endpoint_ids.*' => 'exists:endpoints,id',
         ]);
@@ -141,10 +135,7 @@ class EventController extends Controller
     public function destroy(Request $request, Event $event): JsonResponse
     {
         $this->authorizeAbility($request, 'delete');
-
-        if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('delete', $event);
 
         $event->delete();
 

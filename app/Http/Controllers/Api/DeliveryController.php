@@ -76,16 +76,7 @@ class DeliveryController extends Controller
     public function show(Request $request, Delivery $delivery): JsonResponse
     {
         $this->authorizeAbility($request, 'read');
-
-        // Load the event with trashed included: a soft-deleted parent event
-        // must not make an existing delivery's ownership check (or its
-        // history) silently disappear.
-        $event = $delivery->event()->withTrashed()->first();
-
-        // Ensure the delivery belongs to the authenticated user
-        if (! $event || $event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('view', $delivery);
 
         return response()->json($delivery->load(['event' => fn ($q) => $q->withTrashed(), 'endpoint']));
     }

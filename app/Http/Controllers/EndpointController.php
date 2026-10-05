@@ -17,7 +17,7 @@ class EndpointController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl()],
+            'url' => ['required', 'url', 'max:2048', new SafeWebhookUrl],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -32,11 +32,11 @@ class EndpointController extends Controller
 
     public function update(Request $request, Endpoint $endpoint): RedirectResponse
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 404);
+        $this->authorize('update', $endpoint);
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'url' => ['sometimes', 'url', 'max:2048', new SafeWebhookUrl()],
+            'url' => ['sometimes', 'url', 'max:2048', new SafeWebhookUrl],
             'description' => 'nullable|string|max:1000',
             'is_active' => 'boolean',
         ]);
@@ -48,7 +48,7 @@ class EndpointController extends Controller
 
     public function destroy(Request $request, Endpoint $endpoint): RedirectResponse
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 404);
+        $this->authorize('delete', $endpoint);
 
         $endpoint->delete();
 
@@ -57,7 +57,7 @@ class EndpointController extends Controller
 
     public function test(Request $request, Endpoint $endpoint)
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 404);
+        $this->authorize('test', $endpoint);
 
         $safeIp = SafeWebhookUrl::resolveSafeIp($endpoint->url);
 
@@ -109,7 +109,7 @@ class EndpointController extends Controller
 
     public function regenerateSecret(Request $request, Endpoint $endpoint): JsonResponse
     {
-        abort_if($endpoint->user_id !== $request->user()->id, 404);
+        $this->authorize('regenerateSecret', $endpoint);
 
         $newSecret = Str::random(32);
         $endpoint->update(['secret_key' => $newSecret]);

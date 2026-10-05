@@ -100,7 +100,7 @@ class DashboardController extends Controller
 
     public function editEvent(Request $request, Event $event): Response
     {
-        abort_if($event->user_id !== $request->user()->id, 404);
+        $this->authorize('view', $event);
 
         $event->load('endpoints');
         $endpoints = $request->user()->endpoints()

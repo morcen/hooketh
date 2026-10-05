@@ -12,11 +12,7 @@ class DeliveryController extends Controller
 {
     public function retry(Request $request, Delivery $delivery): RedirectResponse
     {
-        // Load the event with trashed included: a soft-deleted parent event
-        // must not turn this ownership check into a crash on a null relation.
-        $event = $delivery->event()->withTrashed()->first();
-
-        abort_if(! $event || $event->user_id !== $request->user()->id, 404);
+        $this->authorize('retry', $delivery);
 
         if (! $delivery->isFailed()) {
             return back()->with('error', 'Only failed deliveries can be retried.');
