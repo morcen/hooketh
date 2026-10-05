@@ -21,11 +21,11 @@ class SendWebhookTriesIsConfigDrivenTest extends TestCase
         config(['webhooks.max_retries' => 2]);
 
         $this->assertSame(3, SendWebhook::maxAttempts());
-        $this->assertSame(3, (new SendWebhook(new Delivery))->tries());
+        $this->assertSame(3, (new SendWebhook(new Delivery()))->tries());
 
         config(['webhooks.max_retries' => 7]);
 
         $this->assertSame(8, SendWebhook::maxAttempts());
-        $this->assertSame(8, (new SendWebhook(new Delivery))->tries());
+        $this->assertSame(8, (new SendWebhook(new Delivery()))->tries());
     }
 }
