@@ -70,8 +70,11 @@ test: ## Run tests
 	docker-compose exec app php artisan test
 
 # Queue commands
+# No --tries flag: SendWebhook (the only job on the "webhooks" queue) defines
+# its own tries()/backoff(), which always override the worker's CLI flags
+# for that job; the retry ceiling is config('webhooks.max_retries').
 queue-work: ## Start queue worker manually
-	docker-compose exec app php artisan queue:work redis --queue=webhooks,default --sleep=3 --tries=3
+	docker-compose exec app php artisan queue:work redis --queue=webhooks,default --sleep=3
 
 queue-restart: ## Restart queue workers
 	docker-compose exec app php artisan queue:restart

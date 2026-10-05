@@ -29,6 +29,11 @@ class SendWebhook implements ShouldQueue
         // ceiling) is what lets handleFailedDelivery() actually reach and use
         // the last configured backoff delay instead of stopping one attempt
         // short of it.
+        //
+        // This always overrides any --tries flag passed to `queue:work` for
+        // this job (Laravel gives a job's own tries() precedence over the
+        // worker's CLI flags), so webhook-worker.conf/Makefile deliberately
+        // omit --tries rather than ship a value that would never be honored.
         return self::maxAttempts();
     }
 
