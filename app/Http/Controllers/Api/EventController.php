@@ -76,10 +76,7 @@ class EventController extends Controller
     public function show(Request $request, Event $event): JsonResponse
     {
         $this->authorizeAbility($request, 'read');
-
-        if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('view', $event);
 
         return response()->json($event->load([
             'endpoints',
@@ -95,10 +92,7 @@ class EventController extends Controller
     public function update(Request $request, Event $event): JsonResponse
     {
         $this->authorizeAbility($request, 'update');
-
-        if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('update', $event);
 
         $validator = Validator::make($request->all(), [
             'name' => [
@@ -141,10 +135,7 @@ class EventController extends Controller
     public function destroy(Request $request, Event $event): JsonResponse
     {
         $this->authorizeAbility($request, 'delete');
-
-        if ($event->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Not Found'], 404);
-        }
+        $this->authorize('delete', $event);
 
         $event->delete();
 
