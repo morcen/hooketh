@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Force HTTPS
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the application forces all generated URLs to use the
+    | https:// scheme and redirects incoming HTTP requests to their https://
+    | equivalent. Enable this when the application is reachable over HTTP
+    | directly (i.e. not sitting behind a TLS-terminating load balancer that
+    | already guarantees HTTPS).
+    |
+    */
+
+    'force_https' => (bool) env('APP_FORCE_HTTPS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
