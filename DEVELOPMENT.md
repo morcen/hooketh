@@ -37,7 +37,7 @@ This setup runs Laravel in Docker while running the Vite dev server locally for 
 ```bash
 # 1. Clone and enter the project
 git clone https://github.com/morcen/hooketh.git
-cd webhook-management-platform
+cd hooketh
 
 # 2. Start Docker services
 make setup
