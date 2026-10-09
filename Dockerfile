@@ -112,6 +112,26 @@ EXPOSE 9000
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
+# Standalone stage - bundles nginx with php-fpm behind supervisor so the
+# image can serve HTTP directly from a single container. The `production`
+# target above only runs php-fpm (FastCGI on port 9000), which works in
+# docker-compose because the separate `nginx` service fronts it, but single-
+# container platforms (Heroku, Cloud Run, ECS Fargate) and a plain
+# `docker run` have no sidecar reverse proxy to do that job. This stage is
+# for those deployments; docker-compose's `app` service keeps using the
+# `production` target unchanged.
+FROM production AS standalone
+
+RUN apk add --no-cache nginx \
+    && sed 's/fastcgi_pass app:9000;/fastcgi_pass 127.0.0.1:9000;/' docker/nginx.conf > /etc/nginx/http.d/default.conf
+
+COPY docker/supervisord.standalone.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose port 80 for HTTP (nginx), instead of production's FastCGI port 9000
+EXPOSE 80
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
 # Queue worker stage
 FROM production AS queue-worker
 

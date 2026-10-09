@@ -19,14 +19,24 @@ This means the PostgreSQL PHP extensions are not installed. Our Docker image han
 - PostgreSQL and Redis services (managed or containerized)
 
 ### Build and Deploy
+
+If you're running `docker-compose.yml` as-is, build the `production` target
+as usual — its separate `nginx` service already fronts php-fpm. If you're
+running the app as a **single container** with no sidecar reverse proxy
+(a plain `docker run`, or any of the cloud recipes below), build the
+`standalone` target instead: `production` only runs php-fpm, which speaks
+FastCGI on port 9000, not HTTP, so pointing a load balancer or `docker run
+-p` straight at it will not work. `standalone` bundles nginx with php-fpm
+in one container and serves HTTP on port 80.
+
 ```bash
-# Build for production
-docker build --target production -t webhook-platform:latest .
+# Build the standalone image (nginx + php-fpm in one container)
+docker build --target standalone -t webhook-platform:latest .
 
 # Run with proper environment
 docker run -d \
   --name webhook-app \
-  -p 80:9000 \
+  -p 80:80 \
   -e APP_ENV=production \
   -e DB_HOST=your-db-host \
   -e DB_PASSWORD=your-db-password \
@@ -53,7 +63,8 @@ services:
 - name: web
   source_dir: /
   dockerfile_path: Dockerfile
-  build_command: docker build --target production .
+  build_command: docker build --target standalone .
+  http_port: 80
   environment_slug: docker
   instance_count: 1
   instance_size_slug: basic-xxs
@@ -92,60 +103,61 @@ Create `railway.json`:
   "build": {
     "builder": "dockerfile",
     "dockerfilePath": "Dockerfile",
-    "buildCommand": "docker build --target production ."
+    "buildCommand": "docker build --target standalone ."
   },
   "deploy": {
-    "startCommand": "supervisord -c /etc/supervisor/conf.d/supervisord.conf",
+    "startCommand": "sh -c \"sed -i \\\"s/listen 80;/listen ${PORT:-80};/\\\" /etc/nginx/http.d/default.conf && supervisord -c /etc/supervisor/conf.d/supervisord.conf\"",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100
   }
 }
 ```
 
+> Railway (like Heroku below) assigns a dynamic `PORT` at runtime, so the
+> container's nginx has to bind to it at startup rather than at build time;
+> the `startCommand` above rewrites nginx's `listen` directive before
+> starting supervisor.
+
 ### 3. **Heroku** (Using Docker)
 
-Create `heroku.yml`:
+Create `heroku.yml`. Build the `standalone` target — it bundles nginx with
+php-fpm so the container actually speaks HTTP; `production` alone only
+speaks FastCGI on port 9000 and nothing can route Heroku's traffic to it.
+Heroku also assigns `$PORT` dynamically, so nginx's `listen` directive is
+rewritten at container startup rather than at build time:
+
 ```yaml
 build:
   docker:
     web: Dockerfile
   config:
-    DOCKER_BUILD_TARGET: production
+    DOCKER_BUILD_TARGET: standalone
 run:
-  web: /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+  web: sh -c "sed -i \"s/listen 80;/listen ${PORT:-80};/\" /etc/nginx/http.d/default.conf && /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
 addons:
   - plan: heroku-postgresql:mini
   - plan: heroku-redis:mini
 ```
 
-Add Heroku-specific Dockerfile:
-```dockerfile
-# Add this to the end of your Dockerfile
-# Heroku stage
-FROM production AS heroku
-
-# Heroku expects the app to bind to $PORT
-RUN sed -i 's/9000/\$PORT/g' /etc/supervisor/conf.d/supervisord.conf
-
-# Use PORT environment variable
-ENV PORT=8080
-EXPOSE $PORT
-
-CMD /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
-```
-
 ### 4. **Google Cloud Run**
 
-Deploy command:
+Cloud Run runs a single container per service with no sidecar reverse
+proxy, so build the `standalone` target (nginx + php-fpm) rather than
+`production` (php-fpm/FastCGI only) — `gcloud builds submit --tag` with no
+further config builds the Dockerfile's default (last) stage, not
+`standalone`, so the target has to be built and pushed explicitly:
+
 ```bash
-# Build and push to Google Container Registry
-gcloud builds submit --tag gcr.io/PROJECT-ID/webhook-platform
+# Build the standalone image and push it to Google Container Registry
+docker build --target standalone -t gcr.io/PROJECT-ID/webhook-platform .
+docker push gcr.io/PROJECT-ID/webhook-platform
 
 # Deploy to Cloud Run
 gcloud run deploy webhook-platform \
   --image gcr.io/PROJECT-ID/webhook-platform \
   --platform managed \
   --region us-central1 \
+  --port 80 \
   --allow-unauthenticated \
   --set-env-vars APP_ENV=production \
   --set-env-vars DB_HOST=YOUR_DB_HOST \
@@ -166,6 +178,11 @@ For Laravel's official cloud platform:
 
 ### 6. **AWS ECS with Fargate**
 
+Push the image built from the `standalone` target (`docker build --target
+standalone ...`) to ECR — Fargate runs one container per task with no
+reverse-proxy sidecar, so the image needs to speak HTTP itself rather than
+hand the task's load balancer raw FastCGI on port 9000.
+
 Create `task-definition.json`:
 ```json
 {
@@ -181,7 +198,7 @@ Create `task-definition.json`:
       "image": "your-account.dkr.ecr.region.amazonaws.com/webhook-platform:latest",
       "portMappings": [
         {
-          "containerPort": 9000,
+          "containerPort": 80,
           "protocol": "tcp"
         }
       ],
