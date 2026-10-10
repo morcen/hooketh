@@ -161,7 +161,8 @@ fi
 echo ""
 echo "🐳 Checking Docker images..."
 
-if docker images | grep -q webhook-management-platform; then
+PROJECT_NAME=$(basename "$(pwd)" | tr '[:upper:]' '[:lower:]')
+if docker images | grep -q "^${PROJECT_NAME}[-_]"; then
     echo -e "${GREEN}✅ Application Docker images are built${NC}"
 else
     print_warning "Application Docker images not found. Run 'make build' to build them."
