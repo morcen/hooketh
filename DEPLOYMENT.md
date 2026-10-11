@@ -434,11 +434,12 @@ Authorization: Bearer <sanctum-token>
 `queue_worker` is `unknown` if the application has never been fully started (no heartbeat key in Redis yet). The scheduler container runs `php artisan queue:heartbeat` every minute, which dispatches a job onto the `webhooks` queue; the heartbeat key is only written once an actual queue worker processes that job, so staleness reflects worker liveness, not just the scheduler being up.
 
 ### Docker Health Check
-Add to Dockerfile:
+Add to Dockerfile (for the `standalone` target, which is the one that actually
+serves HTTP — see "Build and Deploy" above):
 ```dockerfile
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD php artisan inspire || exit 1
+    CMD curl -f http://localhost/health || exit 1
 ```
 
 ## 🔄 CI/CD Pipeline Example
