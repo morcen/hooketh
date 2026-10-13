@@ -16,6 +16,18 @@ export default defineConfig({
         screenshot: 'only-on-failure',
     },
 
+    // Self-starts the app against the SQLite database prepared by the
+    // e2e CI job (see .github/workflows/ci.yml), so the suite can also be
+    // run locally with a single `npm run test:e2e` once the app has been
+    // migrated. Set PLAYWRIGHT_BASE_URL to point at an already-running
+    // server (e.g. `make up`) to skip this and reuse it instead.
+    webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
+        command: 'php artisan serve --host=127.0.0.1 --port=8080',
+        url: 'http://127.0.0.1:8080/health',
+        reuseExistingServer: !process.env.CI,
+        timeout: 30_000,
+    },
+
     projects: [
         {
             name: 'setup',
