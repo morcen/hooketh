@@ -55,11 +55,22 @@ test.describe('Dashboard', () => {
         }
     })
 
-    test('health endpoint returns healthy status', async ({ request }) => {
+    test('public health endpoint returns only status and timestamp', async ({ request }) => {
         const response = await request.get('/health')
         expect(response.status()).toBe(200)
         const body = await response.json()
-        expect(body).toHaveProperty('database')
-        expect(body).toHaveProperty('redis')
+        expect(body).toEqual({
+            status: expect.any(String),
+            timestamp: expect.any(String),
+        })
+    })
+
+    test('authenticated health/detailed endpoint returns the full service breakdown', async ({ request }) => {
+        const response = await request.get('/health/detailed')
+        expect(response.status()).toBe(200)
+        const body = await response.json()
+        expect(body).toHaveProperty('services.database')
+        expect(body).toHaveProperty('services.redis')
+        expect(body).toHaveProperty('services.queue_worker')
     })
 })
