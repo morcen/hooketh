@@ -56,7 +56,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # resources/views/app.blade.php's @vite() directive. resources/js/app.js
 # imports vendor/tightenco/ziggy directly, so this stage needs the vendor/
 # directory Composer just installed in php-base above.
-FROM node:22-alpine AS node-build
+FROM node:25-alpine AS node-build
 
 WORKDIR /app
 
