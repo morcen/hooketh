@@ -66,11 +66,6 @@ logs/
 *.tmp
 *.temp
 
-# Dependencies
-composer.lock
-package-lock.json
-yarn.lock
-
 # Cache
 .cache/
 *.cache
