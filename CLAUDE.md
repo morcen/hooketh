@@ -58,7 +58,7 @@ Two distinct paths exist side by side:
 3. Dispatches a `SendWebhook` job onto the `webhooks` queue.
 
 `SendWebhook` job (`app/Jobs/SendWebhook.php`):
-- Signs each request with `X-Webhook-Secret: sha256=<hmac>`.
+- Signs each request with `X-Webhook-Secret: <hmac>` (raw hex-encoded HMAC-SHA256 digest, no scheme prefix).
 - Records response code, body, and `duration_ms` on the `Delivery`.
 - On failure, calls `$this->release($delay)` with exponential backoff from `config('webhooks.backoff_delays')`.
 
