@@ -19,8 +19,6 @@ class SendWebhook implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public $maxExceptions = 3;
-
     public function tries(): int
     {
         // config('webhooks.max_retries') is the number of *retries*, not the
