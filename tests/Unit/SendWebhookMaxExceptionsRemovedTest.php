@@ -18,7 +18,7 @@ class SendWebhookMaxExceptionsRemovedTest extends TestCase
      */
     public function test_max_exceptions_property_does_not_exist(): void
     {
-        $job = new SendWebhook(new Delivery);
+        $job = new SendWebhook(new Delivery());
 
         $this->assertFalse(property_exists($job, 'maxExceptions'));
     }
