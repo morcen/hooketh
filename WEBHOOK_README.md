@@ -169,7 +169,7 @@ php artisan serve
 
 2. **Start the queue worker**
 ```bash
-php artisan queue:work redis --queue=webhooks --tries=5
+php artisan queue:work redis --queue=webhooks
 ```
 
 3. **Start the scheduler (optional)**
@@ -342,7 +342,7 @@ Create `/etc/supervisor/conf.d/webhook-worker.conf`:
 ```ini
 [program:webhook-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /path/to/hooketh/artisan queue:work redis --sleep=3 --tries=5 --max-time=3600 --queue=webhooks
+command=php /path/to/hooketh/artisan queue:work redis --sleep=3 --max-time=3600 --queue=webhooks
 autostart=true
 autorestart=true
 stopasgroup=true
@@ -354,7 +354,7 @@ stdout_logfile=/var/log/webhook-worker.log
 stopwaitsecs=3600
 ```
 
-> The `--tries` flag on the queue worker sets a hard cap but the actual retry count is controlled by `WEBHOOK_MAX_RETRIES` in your `.env` file.
+> There is intentionally no `--tries` flag on the queue worker: `SendWebhook` defines its own `tries()`/`backoff()`, which always take precedence over the worker's CLI flags for that job. The actual retry count is controlled by `WEBHOOK_MAX_RETRIES` in your `.env` file.
 
 Then restart supervisor:
 ```bash

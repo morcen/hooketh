@@ -135,8 +135,11 @@ CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 # Queue worker stage
 FROM production AS queue-worker
 
-# Override CMD to run queue worker
-CMD ["php", "/var/www/html/artisan", "queue:work", "redis", "--queue=webhooks,default", "--sleep=3", "--tries=3", "--max-time=3600"]
+# Override CMD to run queue worker. No --tries flag: SendWebhook defines its
+# own tries()/backoff(), which always take precedence over the worker's CLI
+# flags for that job. The actual retry ceiling is
+# config('webhooks.max_retries'), enforced via Delivery.attempt_count.
+CMD ["php", "/var/www/html/artisan", "queue:work", "redis", "--queue=webhooks,default", "--sleep=3", "--max-time=3600"]
 
 # Scheduler stage  
 FROM production AS scheduler

@@ -93,7 +93,7 @@ php artisan queue:restart
 # Configured in .laravelcloud.yml
 workers:
   - name: webhook-queue
-    command: php artisan queue:work redis --queue=webhooks,default --sleep=3 --tries=3 --max-time=3600
+    command: php artisan queue:work redis --queue=webhooks,default --sleep=3 --max-time=3600
     processes: 2
 ```
 
